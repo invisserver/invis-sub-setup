@@ -1,0 +1,128 @@
+#!/bin/bash
+### MODUL-NR. 001 ###
+# (c) August 2008 Stefan Schäfer / FSP Computer & Netzwerke
+# (c) 2009-2017 Stefan Schäfer / invis-server.org / stefan@invis-server.org
+# (c) 2013,2014 Dimitri Asarowski / invis-server.org / dimitri@invis-server.org
+# (c) 2013-2017 Ingo Göppert / invis-server.org / ingo@invis-server.org
+
+# License: GPLv3
+# Questions: info@invis-server.org
+
+# Dieses Modul führt vorbereitende Schritte zur Instalaltion eines invis-
+# Servers durch.
+
+# This module prepares all further steps for setting up an invis-Server.
+
+# Dieses Programm ist freie Software. Sie können es unter den Bedingungen der 
+# GNU General Public License, wie von der Free Software Foundation veröffentlicht,
+# weitergeben und/oder modifizieren, entweder gemäß Version 3 der Lizenz oder
+# (nach Ihrer Option) jeder späteren Version.
+
+# Die Veröffentlichung dieses Programms erfolgt in der Hoffnung, daß es Ihnen
+# von Nutzen sein wird, aber OHNE IRGENDEINE GARANTIE, sogar ohne die implizite 
+# Garantie der MARKTREIFE oder der VERWENDBARKEIT FÜR EINEN BESTIMMTEN ZWECK. 
+# Details finden Sie in der GNU General Public License.
+
+# Sie sollten ein Exemplar der GNU General Public License zusammen mit diesem 
+# Programm erhalten haben. Falls nicht, siehe <http://www.gnu.org/licenses/>. 
+
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+# include functions
+source $SINEINCLUDEDIR/functions
+
+modulename=`basename $0`
+
+# data privacy information
+textbox "$INFODIR/dataprivacy.txt" "Datenschutzinformationen" "Weiter"
+
+# are all requirements fullfilled?
+dialog --backtitle "$DIALOGTITLE - Modul: $modulename" --title "Installationvoraussetzungen" --exit-label "Weiter" --textbox "$INFODIR/setuprequires.txt" 0 0 --and-widget --backtitle "$DIALOGTITLE" --title "Installationvoraussetzungen"  --defaultno --yesno "Sind alle Voraussetungen erfüllt?" 0 0
+prepok=${?}
+
+if [[ $prepok == "0" ]]; then
+    windowtitle="Software Installation"
+    msgbox "Es wird alle für den invis Server benötigte Software installiert." "Software Installation"
+    # get signing keys from possible existing yum or rpm-md repositories
+    rpmkeyimporter
+    ## refresh zypper repo-Cache an do update
+    pgsubtitle="Repository-Cache wird aktualisiert"
+    zypper --gpg-auto-import-keys ref 2>&1| tee -a $LOGFILE | pgbox
+    zyppercheck ${PIPESTATUS[0]}
+    pgsubtitle="Online Update wird durchgeführt" 
+    zypper -n up --type package 2>&1| tee -a $LOGFILE | pgbox
+    zyppercheck ${PIPESTATUS[0]}
+	
+    # enable Postfix
+    chkservice "postfix"
+	
+    # get upgrade packages from spins:invis:common
+    pgsubtitle="Distributions-Upgrade wird durchgeführt" 
+    zypper -n dup --from spins_invis_15_common 2>&1| tee -a $LOGFILE | pgbox
+    zyppercheck ${PIPESTATUS[0]}
+
+    # Patterns
+    pgsubtitle="Software-Gruppen werden installiert" 
+    zypper -n install -t pattern `cat $PACKAGELISTDIR/invis_schemes` 2>&1 | tee -a $LOGFILE | pgbox
+    zyppercheck ${PIPESTATUS[0]}
+    # Basis Software
+    pgsubtitle="Basis Software wird installiert" 
+    zypper -n install -n `cat $PACKAGELISTDIR/invis_base` 2>&1| tee -a $LOGFILE | pgbox 
+    zyppercheck ${PIPESTATUS[0]}
+
+    # ownCloud client
+    pgsubtitle="ownCloud Client wird installiert" 
+    zypper -n install -n --no-recommends owncloud-client 2>&1| tee -a $LOGFILE | pgbox 
+    zyppercheck ${PIPESTATUS[0]}
+
+    # Samba Pakete werden installiert
+    pgsubtitle="Samba wird installiert"
+
+    # Installation der invis-eigenen Samba-Pakete
+    zypper refresh 2>&1| tee -a $LOGFILE | pgbox
+    zyppercheck ${PIPESTATUS[0]}
+    zypper -n install -n `cat $PACKAGELISTDIR/samba-ad` 2>&1| tee -a $LOGFILE | pgbox
+    zyppercheck ${PIPESTATUS[0]}
+
+    # NFS-Server
+    pgsubtitle="Zusätzliche Fileserver Software wird installiert" 
+    zypper -n install -n `cat $PACKAGELISTDIR/fileserver_additional` 2>&1| tee -a $LOGFILE | pgbox 25 110 
+    zyppercheck ${PIPESTATUS[0]}
+
+    # Grub2-Konfiguration
+    # Eigenes Grub2 Theme installieren
+    tar -xf $TEMPLATEDIR/$modulename/grub/invis8.tar.gz -C /boot/grub2/themes/ 2>&1| tee -a $LOGFILE | pgbox 25 110 
+        
+    # Grub2 Konfiguration erstellen
+    path="/etc/default"
+    mv $path/grub $path/grub.opensuse
+    cp $TEMPLATEDIR/$modulename/grub/grub $path/
+    string="invisversion%$INVISVERSION"
+    changevalues "$path" grub "$string"
+    grub2-mkconfig -o /boot/grub2/grub.cfg  2>&1| tee -a $LOGFILE | pgbox 25 110 
+
+    # install grub on all harddisks if there is an raid device md0 an its mounted to /boot
+    bootdevice=`cat /etc/fstab |grep "/boot" | cut -d " " -f1`
+    if [[ $bootdevice == md* ]]; then
+	for device in `mdadm -D /dev/$bootdevice |grep "/dev/sd" |tr "\t" " "| tr -s " " |cut -d " " -f8 |cut -d "1" -f1`; do
+	    echo "Grub2 wird im Master-Boot-Record von Festplatte $device installiert." 2>&1| tee -a $LOGFILE/sine.log | pgbox 25 110
+	    grub2-install $device 2>&1| tee -a $LOGFILE/sine.log | pgbox 25 110
+	done
+    fi
+
+else
+    msgbox "Erfüllen Sie zunächst alle Voraussetzungen und starten Sie das Script dann erneut" "Installationsvoraussetzungen"
+    exit 5
+fi
+

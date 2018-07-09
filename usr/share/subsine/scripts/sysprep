@@ -1,0 +1,425 @@
+#!/bin/bash
+### MODUL-NR. 003 ###
+# (c) August 2008 Stefan Schäfer / FSP Computer & Netzwerke
+# (c) 2009-2017 Stefan Schäfer / invis-server.org / stefan@invis-server.org
+# (c) 2013,2014 Dimitri Asarowski / invis-server.org / dimitri@invis-server.org
+# (c) 2013-2017 Ingo Göppert / invis-server.org / ingo@invis-server.org
+
+# License: GPLv3
+# Questions: info@invis-server.org
+
+# In diesem Modul werden wesentliche Grundkonfigurationen des Servers vorgenommen
+
+# This module does some basic server configurations.
+
+# Dieses Programm ist freie Software. Sie können es unter den Bedingungen der 
+# GNU General Public License, wie von der Free Software Foundation veröffentlicht,
+# weitergeben und/oder modifizieren, entweder gemäß Version 3 der Lizenz oder
+# (nach Ihrer Option) jeder späteren Version.
+
+# Die Veröffentlichung dieses Programms erfolgt in der Hoffnung, daß es Ihnen
+# von Nutzen sein wird, aber OHNE IRGENDEINE GARANTIE, sogar ohne die implizite 
+# Garantie der MARKTREIFE oder der VERWENDBARKEIT FÜR EINEN BESTIMMTEN ZWECK. 
+# Details finden Sie in der GNU General Public License.
+
+# Sie sollten ein Exemplar der GNU General Public License zusammen mit diesem 
+# Programm erhalten haben. Falls nicht, siehe <http://www.gnu.org/licenses/>. 
+
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+# include functions
+source $SINEINCLUDEDIR/functions
+
+modulename=`basename $0`
+
+timestamp=`date +%s`
+windowtitle="Systemvorbereitung"
+pgsubtitle="Es wird eine Sicherung des /etc Verzeichnisses erstellt."
+tar -czf $SINEWORKINGDIR/etc-backup-$timestamp.tar.gz /etc 2>&1| tee -a $LOGFILE | pgbox
+
+# /etc/issue anpassen
+mv /etc/issue /etc/issue.old
+mv /etc/issue.net /etc/issue.net.old
+
+echo "Willkommen an invis-Server Active Directory $INVISVERSION auf openSUSE $OPENSUSEVERSION. \r (\l)." > /etc/issue
+echo "Willkommen an invis-Server Active Directory $INVISVERSION auf openSUSE $OPENSUSEVERSION. %r (%t)." > /etc/issue.net
+
+# set LINK_REQUIRED global to no
+echo "LINK_REQUIRED wird in der globalen Netzwerkkonfiguration auf \"no\" gesetzt!" 2>&1| tee -a $LOGFILE | pgbox
+sysconf_addword -r /etc/sysconfig/network/config LINK_REQUIRED auto 2>&1| tee -a $LOGFILE | pgbox
+sysconf_addword /etc/sysconfig/network/config LINK_REQUIRED no 2>&1| tee -a $LOGFILE | pgbox
+
+# Verzeichnisse in /etc/skel anlegen
+mkdir /etc/skel/Dokumente
+mkdir /etc/skel/Downloads
+mkdir /etc/skel/Bilder
+mkdir /etc/skel/Musik
+mkdir /etc/skel/Videos
+mkdir /etc/skel/ownCloud
+mkdir /etc/skel/ics
+echo "umask 0002" >> /etc/skel/.profile
+
+## Virenscanner einrichten
+# Quarantaeneverzeichnis anlegen
+mkdir /var/spool/infected
+av=`getconfdata "AV" "2"`
+avcron=`getconfdata "AVCRON" "2"`
+
+# Der ausgewaehlte Virenscanner wird in invis.conf eingetragen
+string="AV:clamav%AV:$av"
+changevalues $INVISCONFDIR "invis.conf" "$string"
+    
+# Eintragen, ob regelmaeßig auf Viren geprueft wird.
+string="avCheck:j%avCheck:$avcron"
+changevalues $INVISCONFDIR "invis.conf" "$string"
+
+# add invis-Version to config-file
+string="invisversion%$INVISVERSION"
+changevalues $INVISCONFDIR "invis.conf" "$string"
+
+pgsubtitle="Der Virenscanner ClamAV wird installiert, aktualisiert und aktiviert.\nAls globales Quarantäneverzeichnis wurde /var/spool/infected angelegt."
+if [[ $av == "clamav" ]]; then 
+    zypper -n install -n clamav 2>&1| tee -a $LOGFILE | pgbox
+    zyppercheck ${PIPESTATUS[0]}
+    cp $TEMPLATEDIR/$modulename/clamav/clamd.conf /etc 	2>&1| tee -a $LOGFILE
+    cp $TEMPLATEDIR/$modulename/clamav/freshclam.conf /etc 	2>&1| tee -a $LOGFILE
+    touch /var/log/clamd.log 				2>&1| tee -a $LOGFILE
+    chown vscan:vscan /var/log/clamd.log 			2>&1| tee -a $LOGFILE
+    touch /var/log/freshclam.log 				2>&1| tee -a $LOGFILE
+    chown vscan:vscan /var/log/freshclam.log 		2>&1| tee -a $LOGFILE
+    freshclam 2>&1| tee -a $LOGFILE | pgbox
+    chkservice "freshclam"
+    chkservice "clamd"
+else  
+    # Info einblenden
+    # Dieser Block ist vorgesehen fuer die Installation eines alternativen Virenscanners
+    clear
+    windowtitle=""
+fi
+
+## invis-Konfigurationsdatei anpassen
+path="/etc/invis"
+file="invis.conf"
+adminmail=`getconfdata "Admail" "2"`
+string="administrator@invis-net.loc%$adminmail"
+changevalues $path $file "$string"
+
+admin=`getconfdata "Admin" "2"`
+string="Heinz Becker%$admin"
+changevalues $path $file "$string"
+
+certmail=`getconfdata "certMail" "2"`
+string="certmail@invis-net.loc%$certmail"
+changevalues $path $file "$string"
+
+mailsender=`getconfdata "certOwner" "2"`
+string="certowner%$admin"
+changevalues $path $file "$string"
+
+domain=`getconfdata "Domain" "2"`
+string="invis-net.loc%$domain"
+changevalues $path $file "$string"
+
+basedn=`getconfdata "baseDN" "2"`
+string="dc=invis-net,dc=loc%$basedn"
+changevalues $INVISCONFDIR $file "$string"
+
+cleantr=`getconfdata "cleanTR" "2"`
+if [[ $cleantr == "j" ]]; then
+    string="cleanTrOn:n%cleanTrOn:$cleantr"
+    changevalues $INVISCONFDIR $file "$string"
+    maxdays=`getconfdata "TRmaxDays" "2"`
+    string="trMaxDays:21%trMaxDays:$maxdays"
+    changevalues $INVISCONFDIR $file "$string"
+fi
+
+cleandasi=`getconfdata "cleanDasi" "2"`
+if [[ $cleandasi == "j" ]]; then
+    string="cleanDasi:n%cleanDasi:$cleandasi"
+    changevalues $INVISCONFDIR $file "$string"
+    maxdays=`getconfdata "DasimaxDays" "2"`
+    string="DasiMaxDays:21%DasiMaxDays:$maxdays"
+    changevalues $INVISCONFDIR $file "$string"
+fi
+
+ddnshn=`getconfdata "DDNS" "2"`
+if [[ $ddnshn != "none" ]]; then
+    string="hostname.ihredomain.de%$ddnshn"
+    changevalues $INVISCONFDIR $file "$string"
+fi
+
+groupware=`getconfdata "Groupware" "2"`
+## verwendete Groupware in Konfigurationsdatei schreiben
+case $groupware in
+    "kopano" ) 
+	string="usedgroupware%kopano"
+	changevalues $INVISCONFDIR $file "$string"
+	;;
+    "tine20" )
+	string="usedgroupware%tine20"
+	changevalues $INVISCONFDIR $file "$string"
+	;;
+    "sogo" )
+	string="usedgroupware%sogo"
+	changevalues $INVISCONFDIR $file "$string"
+	;;
+    "roundcube" )
+	string="usedgroupware%roundcube"
+	changevalues $INVISCONFDIR $file "$string"
+	;;
+esac
+
+erp=`getconfdata "ERPSoftware" "2"`
+## verwendete ERP in Konfigurationsdatei schreiben
+case $erp in
+    "wawision" ) 
+	string="usederp%wawision"
+	changevalues $INVISCONFDIR $file "$string"
+	;;
+    "kivitendo" )
+	string="usederp%kivitendo"
+	changevalues $INVISCONFDIR $file "$string"
+	;;
+    "keine" )
+	string="usederp%none"
+	changevalues $INVISCONFDIR $file "$string"
+	;;
+esac
+
+revdomain=`getconfdata "ReverseDom" "2"`
+revdomain="$revdomain.in-addr.arpa"
+string="220.168.192.in-addr.arpa%$revdomain"
+changevalues $path $file "$string"
+
+# Limits erhoehen fuer Samba und Zarafa
+cp $TEMPLATEDIR/$modulename/security/limits.conf /etc/security/ 2>&1| tee -a $LOGFILE | pgbox
+
+## prepare sysconfig variables
+ipaddr=`getconfdata "IP" "2"`
+
+pgsubtitle="Globale Systemkonfigurationsvariablen werden gesetzt."
+# dhcpd
+echo "Globale DHCP Server-Konfiguration wird angepasst." 2>&1| tee -a $LOGFILE | pgbox
+sysconf_addword /etc/sysconfig/dhcpd DHCPD_IFUP_RESTART yes 2>&1| tee -a $LOGFILE | pgbox
+sysconf_addword /etc/sysconfig/dhcpd DHCPD6_IFUP_RESTART yes 2>&1| tee -a $LOGFILE | pgbox
+sysconf_addword /etc/sysconfig/dhcpd DHCPD_INTERFACE intern 2>&1| tee -a $LOGFILE | pgbox
+sysconf_addword /etc/sysconfig/dhcpd DHCPD6_INTERFACE intern 2>&1| tee -a $LOGFILE | pgbox
+
+# mail
+echo "System wird so konfiguriert, dass die Postfix-Konfiguration nicht vom System vorgenommen wird." 2>&1| tee -a $LOGFILE | pgbox
+sysconf_addword -r /etc/sysconfig/mail MAIL_CREATE_CONFIG yes 2>&1| tee -a $LOGFILE | pgbox
+sysconf_addword /etc/sysconfig/mail MAIL_CREATE_CONFIG no 2>&1| tee -a $LOGFILE | pgbox
+
+# postfix
+echo "System wird so konfiguriert, dass Postfix-Konfiguration in einem Chroot-Jail läuft." 2>&1| tee -a $LOGFILE | pgbox
+sysconf_addword -r /etc/sysconfig/postfix POSTFIX_CHROOT no 2>&1| tee -a $LOGFILE | pgbox
+sysconf_addword /etc/sysconfig/postfix POSTFIX_CHROOT yes 2>&1| tee -a $LOGFILE | pgbox
+echo "System wird so konfiguriert, dass der Postfix-Daemon nicht in SLP registriert wird." 2>&1| tee -a $LOGFILE | pgbox
+sysconf_addword -r /etc/sysconfig/postfix POSTFIX_REGISTER_SLP yes 2>&1| tee -a $LOGFILE | pgbox
+sysconf_addword /etc/sysconfig/postfix POSTFIX_REGISTER_SLP no 2>&1| tee -a $LOGFILE | pgbox
+
+sysconf_addword -r /etc/sysconfig/postfix POSTFIX_UPDATE_CHROOT_JAIL no 2>&1| tee -a $LOGFILE | pgbox
+sysconf_addword /etc/sysconfig/postfix POSTFIX_UPDATE_CHROOT_JAIL yes 2>&1| tee -a $LOGFILE | pgbox
+
+# ntop
+echo "NTOP Interface wird auf \"intern\" gesetzt." 2>&1| tee -a $LOGFILE | pgbox
+sysconf_addword -r /etc/sysconfig/ntop NTOPD_IFACE eth0 2>&1| tee -a $LOGFILE | pgbox
+sysconf_addword /etc/sysconfig/ntop NTOPD_IFACE intern 2>&1| tee -a $LOGFILE | pgbox
+
+echo "NTOP Ports werden auf 3000 und 3001 (SSL) gesetzt." 2>&1| tee -a $LOGFILE | pgbox
+sysconf_addword -r /etc/sysconfig/ntop NTOPD_PORT 127.0.0.1:3000 2>&1| tee -a $LOGFILE | pgbox
+sysconf_addword /etc/sysconfig/ntop NTOPD_PORT $ipaddr:3000 2>&1| tee -a $LOGFILE | pgbox
+
+sysconf_addword /etc/sysconfig/ntop NTOPD_SSL_PORT 3001 2>&1| tee -a $LOGFILE | pgbox
+
+# remove auto behavior from NETCONFIG DNS and NTP policy
+echo "System wird so konfiguriert, dass weder die Datei resolv.conf noch der NTP-Dienst automatisch konfiguriert werden." 2>&1| tee -a $LOGFILE | pgbox
+sysconf_addword -r /etc/sysconfig/network/config NETCONFIG_DNS_POLICY auto 2>&1| tee -a $LOGFILE | pgbox
+sysconf_addword -r /etc/sysconfig/network/config NETCONFIG_NTP_POLICY auto 2>&1| tee -a $LOGFILE | pgbox 
+
+# /etc/hosts anpassen
+file="hosts"
+path="/etc"
+string="127.0.0.2%$ipaddr"
+changevalues $path $file "$string"
+    
+# Admin PW fuer ntop-user wwwrun setzen
+# Achtung Bug im ntop Paket: Das Verzeichnis in dem ntop versucht die user-db anzulegen existiert nicht. Workaround:
+mkdir /var/lib/ntop
+ntoppw=`getpassword "NtopPW" "3"`
+ntop --set-admin-password=$ntoppw -u wwwrun 2>&1| tee -a $LOGFILE | pgbox
+
+pgsubtitle="Es wird eine Zertifizierungsstelle erzeugt"
+msgbox "Um auf Ihrem invis Server SSL-Schlüssel und Zertifikate für Web- und Mailserver zu erstellen wird eine Zertifizierungsstelle (CA) benötigt.\n\nDies wird im Folgenden vorgenommen. 
+Beantworten Sie die Fragen gewissenhaft. Die meisten Vorgabewerte können Sie übernehmen. Lediglich den Common Name müssen Sie selbst erdenken. Er taucht als Name der CA in allen damit signierten Zertifikaten auf.
+\n\nNotieren Sie sich auf jeden Fall dass hierbei zu vergebende Passwort, Sie werden es immer wieder benötigen!" "CA erstellen"
+
+## easy-rsa einrichten und CA bauen
+cp $TEMPLATEDIR/$modulename/easy-rsa/vars /etc/easy-rsa 2>&1| tee -a $LOGFILE | pgbox
+file="vars"
+path="/etc/easy-rsa"
+
+domain=`getconfdata "Domain" "2"`
+string="localdomain%$domain"
+changevalues $path $file "$string"
+
+country=`getconfdata "Country" "2"`
+string="DE%$country"
+changevalues $path $file "$string"
+
+region=`getconfdata "Region" "2"`
+string="Hessen%$region"
+changevalues $path $file "$string"
+
+city=`getconfdata "City" "2"`
+string="Schotten%$city"
+changevalues $path $file "$string"
+
+organisation=`getconfdata "Organisation" "2"`
+string="invis-server.org%$organisation"
+changevalues $path $file "$string"
+
+certmail=`getconfdata "certMail" "2"`
+string="me@example.net%$certmail"
+changevalues $path $file "$string"
+
+# PKI initialisieren
+easyrsa init-pki 2>&1| tee -a $LOGFILE | pgbox
+
+# CA aufbauen
+easyrsa build-ca
+
+# Stop sine, in case of problems with building the CA
+if [[ $? != 0 ]];then
+    waitinfobox "Beim Bau der lokalen Zertifizierungsstelle (CA) ist ein Fehler aufgetreten. 
+Bitte löschen Sie das nach Ihrer Domain benannte Verzeichnis unter \"/etc/easy-rsa\" und
+starten Sie sine2 erneut." "Fehler beim Erstellen der CA"
+    exit 5
+fi
+
+# CA Datei kopieren
+cp $path/$domain/ca.crt /etc/invis/certs
+chmod go+r /etc/invis/certs/ca.crt
+    
+# DH-Parameterdatei erzeugen
+# 2048 und 512 Bit DH-Parameter direkt mit openssl 
+openssl dhparam -out $path/$domain/dh.pem -2 2048 2>&1| tee -a $LOGFILE | pgbox
+openssl dhparam -out $path/$domain/dh_512.pem -2 512 2>&1| tee -a $LOGFILE | pgbox
+# Beide Dateien auch fuer Postfix bereit stellen
+cp $path/$domain/dh*.pem /etc/postfix
+    
+# CRL Umgebung initialisieren
+ok=1
+while [[ $ok == 1 ]]; do
+    easyrsa gen-crl
+    ok=$?
+    if [[ $ok == 1 ]]; then
+	waitinfobox "Sie haben ein falsches CA-Schlüsselpasswort eingegeben. Bitte versuchen Sie es erneut" "Falsches CA Passwort"
+    fi
+done
+
+# CRL Chain Datei erzeugen
+cat $path/$domain/ca.crt $path/$domain/crl.pem > $path/$domain/crl-chain.pem
+
+# Create certs and keys for all services
+# internal cert and key
+msgbox "Es wird jetzt ein SSL-Schlüsselsatz für Ihren LDAP-Server erzeugt.\n\n
+Das verlangte Passwort ist dass Passwort Ihrer SSL-Zertifizierungsstelle (CA)." "Erzeugen des LDAP-Server Schlüsselsatzes"
+
+inviscerts intern 2>&1| tee -a $LOGFILE
+chown -R :pkeys /etc/invis/private 2>&1| tee -a $LOGFILE
+chmod g+rx,o-rx /etc/invis/private 2>&1| tee -a $LOGFILE
+
+# internal mailserver cert and key
+msgbox "Es wird jetzt ein SSL-Schlüsselsatz für Ihren Mailserver erzeugt.\n\n
+Das verlangte Passwort ist dass Passwort Ihrer SSL-Zertifizierungsstelle (CA)." "Erzeugen des Mailserver Schlüsselsatzes"
+
+inviscerts ms 2>&1| tee -a $LOGFILE
+usermod -a -G pkeys postfix 2>&1| tee -a $LOGFILE | pgbox
+usermod -a -G pkeys wwwrun 2>&1| tee -a $LOGFILE | pgbox
+usermod -a -G mail postfix 2>&1| tee -a $LOGFILE | pgbox
+
+# external key and cert, only needed if let's encrypt certs are not used
+msgbox "Es wird jetzt ein SSL-Schlüsselsatz für den externen Server-Zugriff erzeugt.\nDieses Schlüsselpaar kann später durch echte Zertifikate von Let's Encrypt ersetzt werden.\n\n
+Das verlangte Passwort ist dass Passwort Ihrer SSL-Zertifizierungsstelle (CA)." "Erzeugen des Schlüsselsatzes für externen Zugriff"
+
+inviscerts extern 2>&1| tee -a $LOGFILE
+
+# Zeitzoneneinstellung des Servers ermitteln
+# php versteht CEST nicht mehr
+timezone=`cat /etc/sysconfig/clock|grep ^DEFAULT_TIMEZONE=|tr -d "\""|cut -d "=" -f 2`
+
+# set timezon in php.ini to local timezone
+file="php.ini"
+path="/etc/php7/apache2"
+string="UTC%$timezone"
+changevalues $path $file "$string"
+
+path="/etc/php7/cli"
+string="UTC%$timezone"
+changevalues $path $file "$string"
+
+path="/etc/php7/fastcgi"
+string="UTC%$timezone"
+changevalues $path $file "$string"
+
+# NTP Dienst wird konfiguriert
+windowtitle="Grundkonfiguration"
+pgsubtitle="Die Systemuhr wird gestellt und Zeit-Server wird gestartet." 
+
+# After testinstallation of ntp there was a file /var/run/ntp instead of a directory.
+# This file blocks the ntp daemons start. Workaround:
+if [[ -f /var/run/ntp ]]; then
+    rm -f /var/run/ntp
+fi
+cp $TEMPLATEDIR/$modulename/ntp/servers-netconfig /var/run/ntp
+
+# NTP-Dienst fuer AD anpassen
+ntpconf="/etc/ntp.conf"
+echo -e "\n" >> $ntpconf
+echo '# Signed Socket for Samba 4 AD DC' >> $ntpconf
+echo 'ntpsigndsocket /var/lib/samba/ntp_signd' >> $ntpconf
+echo 'restrict default mssntp' >> $ntpconf
+
+sockdir="/var/lib/ntp/var/lib/samba/ntp_signd"
+mkdir -p $sockdir
+chown .ntp $sockdir
+chmod 0750 $sockdir
+
+# ntp must run chrooted
+sysconf_addword -r /etc/sysconfig/ntp NTPD_RUN_CHROOTED no 2>&1| tee -a $LOGFILE | pgbox
+sysconf_addword /etc/sysconfig/ntp NTPD_RUN_CHROOTED yes 2>&1| tee -a $LOGFILE | pgbox
+
+# stop chrony (default ntp service since leap 15)
+chkservice "chronyd"
+
+# start ntp daemon
+chkservice "ntpd"
+
+# enable ntp and set hardware clock
+file="invis-pws.conf"
+hwclock --systohc 2>&1| tee -a $LOGFILE | pgbox 
+
+# invis Passwort-Datei anpassen
+ldappw=`getpassword "LDAPAdminPW" "3"`
+string="ldap-secret%$ldappw"
+changevalues $INVISCONFDIR $file "$string"
+
+mysqlpw=`getpassword "MySQLPW" "3"`
+string="mysql-rootpw%$mysqlpw"
+changevalues $INVISCONFDIR $file "$string"
+
+# cron & at-Daemon in Runlevel integrieren und starten
+chkservice "cron"
+chkservice "atd"

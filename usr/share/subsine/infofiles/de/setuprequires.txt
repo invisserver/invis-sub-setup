@@ -1,0 +1,31 @@
+Für die Installation eines invis Servers 14.0 AD müssen folgende Voraussetzungen erfüllt sein:
+
+    - Als Basis muss openSUSE Leap 15.0, möglichst ohne grafische Oberfläche installiert sein.
+    
+    - Der Server muss über zwei Netzwerkkarten (extern & intern) verfügen, die Netzwerk-
+      schnittstellen müssen mit Hilfe von Udev-Regeln "extern" und "intern" benannt werden.
+      Zur Erzeugung der Udev-Regeln zur korrekten Bennenung der Netzwerkschnittstellen ist das
+      Script "netsetup" anzuwenden. Nach Anwendung des Scripts muss der Server neu gestartet
+      werden. Die anschließende Einrichtung der Netzwerkkarten muss per YaST vorgenommen werden.
+      Schnittstelle 1 muss als externe Schnittstelle zur Verbindung einem vorgeschalteten Router
+      eingerichtet sein. Bei Verbindung mit dem Router empfielt es sich auf diesem einen 
+      DHCP-Server zu starten und "extern" als DHCP-Client einzurichten. Wenn möglich ist auf
+      dem Router eine feste IP-Adress-Reservierung für den invis-Server einzurichten.
+      Schnittstelle 2 (intern) muss mit einer festen IP-Adresse versehen werden.
+      Die Einrichtung der Netzwerkkarten muss vor der Ausführung des invis-Setup-Scripts "sine"
+      erfolgt sein.
+      
+    - Der Server muss vor Ausführung des Setup-Scripts über einen vollständigen Hostnamen verfügen.
+      Der Hostname kann ebenfalls per YaST gesetzt werden und sollte dem Muster "hostname.domain.tld"
+      gehorchen.
+      
+    - Sie benötigen bis zu drei (mindestens eine) IP Adressen von Nameservern, die Sie für den
+      DNS-Dienst Ihres invis-Servers als Forward-Nameserver nutzen können. Dies können der DNS
+      des vorgeschalteten Routers, die für Sie zuständigen DNS-Server Ihres Internet-Zugangs-
+      Providers oder freie DNS-Server im Internet sein. Prüfen Sie bitte im Vorfeld der Instal-
+      lation, ob die von Ihnen verwendeten DNS-Server auf Anfragen antworten. Antworten diese
+      Server nicht auf Anfragen, beeinträchtig dies sowohl die Installation Ihres invis-Servers
+      als auch den späteren Betrieb.
+      
+    - Für den Fall, dass Sie ownCloud nutzen möchten, benötigen Sie zwingend einen funktionierenden 
+      DDNS Namen oder eine feste IP Adresse über den bzw. die Sie Ihren Server erreichen können.

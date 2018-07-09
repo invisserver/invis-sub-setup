@@ -1,0 +1,256 @@
+#!/bin/bash
+# Kategorie: setup
+# modularised invis AD 13 server setup script sine2
+# Version 14.0
+# (c) August 2008 Stefan Schäfer / FSP Computer & Netzwerke
+# (c) 2009-2017 Stefan Schäfer / invis-server.org / stefan@invis-server.org
+# (c) 2013,2014 Dimitri Asarowski / invis-server.org / dimitri@invis-server.org
+# (c) 2013-2017 Ingo Göppert / invis-server.org / ingo@invis-server.org
+
+# License: GPLv3
+# Questions: info@invis-server.org
+
+# Dieses Script führt alle zur Installation eines invis Servers AD notwendigen 
+# Konfigurationsschritte aus.
+# Das Script sine2 nutzt /var/lib/sine als Arbeitsverzeichnis und /usr/share/sine
+# als Ressourcen-Verzeichnis.
+
+# This scrips leads you through all the invis-server setup scripts.
+# sine2 uses /var/lib/sine as its working-  and /usr/share/sine as it's ressource-
+# directory.
+
+# Dieses Programm ist freie Software. Sie können es unter den Bedingungen der 
+# GNU General Public License, wie von der Free Software Foundation veröffentlicht,
+# weitergeben und/oder modifizieren, entweder gemäß Version 3 der Lizenz oder
+# (nach Ihrer Option) jeder späteren Version.
+
+# Die Veröffentlichung dieses Programms erfolgt in der Hoffnung, daß es Ihnen
+# von Nutzen sein wird, aber OHNE IRGENDEINE GARANTIE, sogar ohne die implizite 
+# Garantie der MARKTREIFE oder der VERWENDBARKEIT FÜR EINEN BESTIMMTEN ZWECK. 
+# Details finden Sie in der GNU General Public License.
+
+# Sie sollten ein Exemplar der GNU General Public License zusammen mit diesem 
+# Programm erhalten haben. Falls nicht, siehe <http://www.gnu.org/licenses/>. 
+
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+# Global variables
+INVISVERSION="14.0"
+SINEWORKINGDIR="/var/lib/sine"
+export INVISVERSION
+export SINEWORKINGDIR
+
+# sine language
+# we have to discuss some kind of automation for the language settings.
+SINELANG="de"
+export SINELANG
+
+# global dialog settings
+DIALOGTITLE="invis AD Server $INVISVERSION Setup"
+DIALOGSHORTHELP="Cursor- ([Auf]/[Ab]) und Tabulatortaste zur Navigation, Leertaste zum auswählen und Enter-Taste zum Bestätigen verwenden."
+export DIALOGTITLE
+export DIALOGSHORTHELP
+
+# global an local variables
+OPENSUSEVERSION=`cat /etc/os-release |grep VERSION=|cut -d = -f2| tr -d "\""`
+STATUSFILE="$SINEWORKINGDIR/prepstat"
+sinehelpersdir="/usr/share/sine"
+REQMODFILE="$sinehelpersdir/registered-modules.txt"
+moduledir="$sinehelpersdir/scripts"
+TEMPLATEDIR="$sinehelpersdir/templates"
+SINEINCLUDEDIR="$sinehelpersdir/include"
+PACKAGELISTDIR="$sinehelpersdir/package-lists"
+REPODIR="$sinehelpersdir/additional-repos"
+INVISCONFDIR="/etc/invis"
+INFODIR="$sinehelpersdir/infofiles/$SINELANG"
+export STATUSFILE
+export REQMODFILE
+export TEMPLATEDIR
+export SINEINCLUDEDIR
+export PACKAGELISTDIR
+export INVISCONFDIR
+export INFODIR
+export REPODIR
+export OPENSUSEVERSION
+
+LOGFILE="/var/log/sine/sine.log"
+export LOGFILE
+
+# include functions
+source $SINEINCLUDEDIR/functions
+
+# environment check
+if [[ -d $TEMPLATEDIR ]]; then
+    if [[ ! -f $STATUSFILE ]]; then
+	echo "001:check" > $STATUSFILE
+    fi
+else
+	echo "Die Konfigurationsdateien sind nicht vorhanden!"
+	exit
+fi
+
+# is this a 64bit machine?.
+if [[ -d /usr/lib64 ]]; then
+    SYSLIBDIR="/usr/lib64"
+else
+    SYSLIBDIR="/usr/lib"
+fi
+export SYSLIBDIR
+
+# is dialog installed?
+if [[ -z `which dialog 2>/dev/null` ]]; then
+    echo  -e "\n\033[1;33mDas Programm \"dialog\" wird installiert.\033[0m"
+    zypper -n install -n dialog
+    zyppercheck ${PIPESTATUS[0]}
+fi
+
+## main functions of sine2 starts here
+# Einlesen des aktuellen Setup-Status
+prepstat=`cat $STATUSFILE | cut -d ":" -f2`
+prepstatnumber=`cat $STATUSFILE | cut -d ":" -f1`
+
+# how was sine2 called?
+case $1 in
+    "help")
+	# Hilfe ausgeben
+	echo -e "sine2 Aufrufe:\n"
+	echo "\"sine2\" ohne weitere Argumente startet das Script regulär."
+	echo "\"sine2 status\" gibt das nächste zu startende Modul aus."
+	echo "\"sine2 log\" gibt das Logfile aus."
+	echo "\"sine2 showconf\" gibt die gespeicherten Konfigurationsdaten aus."
+	echo "\"sine2 showpws\" gibt die gespeicherten Passwörter aus."
+	echo "\"sine2 reset\" löscht die invis-Konfigurationsdaten und den Installationsstatus."
+	echo -e "\"sine2 modulname\" ruft das angegebene Modul auf. Dies ist nur\nfür optionale Module möglich, nachdem sine einmal vollständig\ndurchgelaufen ist."
+	echo -e "Optionale Module: apcupsd, groupware, erp, faxgate, dokuwiki, owncloud,\nkimai, virtualbox.\n"
+	exit 0
+	;;
+    "status")
+	# Status Ausgabe
+	if [[ -f $STATUSFILE ]]; then
+	    echo "Nächstes sine Modul ist: $prepstat"
+	else
+	    echo "sine wurde noch nie aufgerufen. Es wird mit Modul \"check\" begonnen."
+	fi
+	exit 0
+	;;
+    "log")
+	# Logfile Ausgabe
+	if [[ -f $LOGFILE ]]; then
+	    less $LOGFILE
+	else
+	    echo "Es ist noch kein Logfile vorhanden."
+	fi
+	exit 0
+	;;
+    "showconf")
+	# Konfigurationsdaten ausgeben
+	if [[ -f $SINEWORKINGDIR/invis_confdata ]]; then
+	    less $SINEWORKINGDIR/invis_confdata
+	else
+	    echo "Es sind noch keine Konfigurationsdaten vorhanden."
+	fi
+	exit 0
+	;;
+    "showpws")
+	# Konfigurationsdaten ausgeben
+	if [[ -f $SINEWORKINGDIR/invis_pws ]]; then
+	    less $SINEWORKINGDIR/invis_pws
+	else
+	    echo "Es ist noch keine Passwortdatei vorhanden."
+	fi
+	exit 0
+	;;
+    "reset")
+	read -p "Alle sine2 Konfigurationsdaten, Passwörter sowie der Installationsstatus werden gelöscht. Sind sie sicher? [j/n] " shure
+	    shure=`tolower $shure`
+	    if [[ $shure == "j" ]]; then
+		rm $SINEWORKINGDIR/invis_pws
+		rm $SINEWORKINGDIR/invis_confdata
+		rm $SINEWORKINGDIR/prepstat
+	    fi
+	exit 0
+	;;
+    "")
+	# building the module list
+	i=0
+	while read line; do
+	    MODULES[i]=$line
+	    ((i=$i+1))
+	done < $REQMODFILE
+	modulecount=$i
+
+	i=0
+	# going through the modules
+	for line in ${MODULES[@]}; do
+	    ((i=$i+1))
+	    datum=`date "+%b %d %H:%M:%S"`
+	    modulename=`echo $line|cut -d ":" -f3`
+	    number=`echo $line|cut -d ":" -f1`
+	    if (( $number < $prepstatnumber )); then
+		echo "$datum: sine2 module \"$modulename\" is already done."| tee -a $LOGFILE | pgbox
+		continue
+	    fi
+	    if [[ -x /$moduledir/$modulename  ]]; then
+		echo "$datum: Starting sine2 module \"$modulename\"."| tee -a $LOGFILE | pgbox
+		sleep 1
+		/$moduledir/$modulename
+		if [[ $? == 5 ]]; then
+		    exit
+		else
+		    if (( $i < $modulecount )); then
+			nextmodule=`echo ${MODULES[$i]}|cut -d ":" -f3`
+			writeprepstat "$nextmodule"
+			waitbox "$modulename" "$nextmodule"
+		    else
+			writeprepstat "ready"
+		    fi
+		fi
+	    else
+		exit 5
+	    fi
+	done
+
+	# Zertifikate fuers Portal pruefen
+	getcertinfo
+	# Und Tschuess
+	textbox "$INFODIR/aftersetup.txt" "Installation abgeschlossen" "Beenden"
+
+	# Auräumen -- Evtl. verwaiste dialog Prozesse killen
+	killall dialog > /dev/null 2>&1
+	rm -f ./$SINEWORKINGDIR/sine_temp
+	exit 0
+	;;
+
+    *)
+	# calling optional modules directly
+	if [[ -z $1 ]];then
+	    echo "Fehler: Kein Modul angegeben."
+	else
+	    modulename=$1
+	fi
+	if [[ $prepstat == "ready" ]] && [[ -x $moduledir/$modulename  ]]; then
+	    modtype=`grep $modulename $REQMODFILE | cut -d ":" -f2`
+	    if [[ $modtype == o ]]; then
+		$moduledir/$modulename
+	    else
+		echo "Das Modul \"$modulename\" ist kein optionales Modul."| tee -a $LOGFILE | pgbox
+	    fi
+	else
+	    echo "Das Modul \"$modulename\" ist nicht vorhanden, nicht ausführbar oder die eigentliche Server-Installation ist noch nicht abgeschlossen."| tee -a $LOGFILE | pgbox
+	fi
+	writeprepstat "ready"
+	exit
+	;;
+esac
+

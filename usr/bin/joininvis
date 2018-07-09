@@ -1,0 +1,186 @@
+#!/bin/bash
+# Script zur Integration eines openSUSE Clients in eine invis-Server Active-
+# Directory Domaene
+# (c) 2015-2017 Stefan Schaefer -- invis-server.org
+# License GPLv3
+# Questions: info@invis-server.org
+
+# Dieses Script führt alle zur Installation eines invis Servers AD notwendigen 
+# Konfigurationsschritte aus.
+# Das Script sine nutzt /var/lib/sine als Arbeitsverzeichnis, hier sind von sine
+# verwendete Kontroll-, Variablen- und Protokolldateien zu finden.
+
+# Dieses Programm ist freie Software. Sie können es unter den Bedingungen der 
+# GNU General Public License, wie von der Free Software Foundation veröffentlicht,
+# weitergeben und/oder modifizieren, entweder gemäß Version 3 der Lizenz oder
+# (nach Ihrer Option) jeder späteren Version.
+
+# Die Veröffentlichung dieses Programms erfolgt in der Hoffnung, daß es Ihnen
+# von Nutzen sein wird, aber OHNE IRGENDEINE GARANTIE, sogar ohne die implizite 
+# Garantie der MARKTREIFE oder der VERWENDBARKEIT FÜR EINEN BESTIMMTEN ZWECK. 
+# Details finden Sie in der GNU General Public License.
+
+# Sie sollten ein Exemplar der GNU General Public License zusammen mit diesem 
+# Programm erhalten haben. Falls nicht, siehe <http://www.gnu.org/licenses/>. 
+
+# Konfigurationsdaten
+confdir="/etc/invis-client"
+conffile="invis-client.conf"
+passfile="$confdir/invis-pws.conf"
+
+exampledir="/usr/share/doc/packages/invisAD-client/examples"
+
+# Funktionen
+# Konfigurationsparameter tauschen
+changevalues() {
+    # Arg1 = Pfad, Arg2 = Konfigurationsdatei, Arg2 = sed String
+    cat $1/$2|sed "s%$3%g" > $1/$2.new
+    mv $1/$2.new $1/$2
+}
+
+# Strings in Kleinschreibung umwandeln
+tolower() {
+    echo $1 | tr [:upper:] [:lower:]
+}
+
+# Strings in Kleinschreibung umwandeln
+toupper() {
+    echo $1 | tr [:lower:] [:upper:]
+}
+
+# Domaene abfragen
+clear
+echo -e "\n\n======================================================================================================"
+echo -e "Sie sollten diesem Computer einen aussagekräftigen und Hostnamen gegeben haben bevor Sie fortfahren.\n"
+echo -e "Sollte dies nicht der Fall sein, brechen Sie das Script mit Strg+C ab."
+echo -e "======================================================================================================"
+sleep 5
+
+read -p "Geben Sie bitte den Namen Ihrer Domäne in DNS Schreibweise ein (Bsp.: example.loc): " reqdnsdomain
+
+# Unterschiedliche Schreibweisen generieren
+dotcount=`echo -n "$reqdnsdomain" | sed -e 's/[^.]//g' | wc -m`
+
+dnsdomain=`tolower $reqdnsdomain`
+krbrealm=`toupper $dnsdomain`
+
+# get invis-Server hostname
+invisserver=`dig SRV _ldap._tcp.$dnsdomain +short |cut -d " " -f4`
+invisip=`dig $invisserver +short`
+
+# modify config file
+changestrings="invis-net.loc%$dnsdomain"
+changevalues $confdir $conffile $changestrings
+
+changestrings="192.168.220.10%$invisip"
+changevalues $confdir $conffile $changestrings
+
+# create NetBIOS-Domain and kerberos realm
+if (( $dotcount == 1 )); then
+    netbiosdomain=`echo $krbrealm | cut -d "." -f1`
+else
+    netbiosdomain=`echo $krbrealm | cut -d "." -f1-$dotcount`
+fi
+
+# spins:invis:common Repository hinzufuegen
+suseversion=`cat /etc/SuSE-release | grep VERSION | tr -d " " | cut -d "=" -f2`
+sv=`echo $suseversion | tr -d "."`
+
+# Dateien sichern und kopieren
+mv /etc/samba/smb.conf /etc/samba/smb.conf.setupsafe
+if [[ -f /etc/sssd/sssd.conf ]]; then
+    old /etc/sssd/sssd.conf
+fi
+old /etc/krb5.conf
+old /etc/nsswitch.conf
+
+# Neue Konfigurationsdateien kopieren und anpassen
+cp $exampledir/etc/krb5.conf /etc
+cp $exampledir/etc/nsswitch.conf /etc
+cp $exampledir/sssd/sssd.conf /etc/sssd
+cp $exampledir/samba/smb.conf /etc/samba
+
+# Samba
+path="/etc/samba"
+modfile="smb.conf"
+
+changestrings="INVIS-NET.LOC%$krbrealm"
+changevalues $path $modfile "$changestrings"
+
+changestrings="INVIS-NET%$netbiosdomain"
+changevalues $path $modfile "$changestrings"
+
+# Kerberos
+path="/etc"
+modfile="krb5.conf"
+
+changestrings="INVIS-NET.LOC%$krbrealm"
+changevalues $path $modfile "$changestrings"
+
+# prepare sssd
+path="/etc/sssd/"
+modfile="sssd.conf"
+
+changestrings="invis-net.loc%$dnsdomain"
+changevalues $path $modfile "$changestrings"
+
+chown root.root "$path/$modfile"
+chmod 0600 "$path/$modfile"
+
+# prepare domain join
+# Bugfix, das folgende Verzeichnis fehlt
+if [[ ! -d "/run/user/0/krb5cc" ]]; then
+    mkdir -p "/run/user/0/krb5cc"
+fi
+
+# inform about next steps question
+echo -e "Sie benötigen jetzt das Passwort des Domänenadministrators.\n"
+
+# test kerberos and andmin password
+kinit Administrator@$krbrealm
+
+if [[ $? != 0 ]]; then
+    echo "Sie haben ein falsches Passwort eingegeben, das Script wird abgebrochen."
+    exit 1
+fi
+
+# join domain
+net join -k
+
+# remove old sss-cache
+delssscache
+
+# SSSD in Autostart integrieren.
+systemctl enable sssd.service
+
+# PAM Konfigurieren -> SSSD Modul aktivieren
+pam-config --add --sss
+
+## Jetzt noch die NFS Freigaben einhaengen
+pdc=`dig SRV _ldap._tcp.$dnsdomain +short |cut -d " " -f4`
+pdc=`echo "${pdc%?}"`
+
+# memberserver or desktop-client?
+membertype="nix"
+until [[ $membertype == "pc" || $membertype == "ms" || $membertype == "nb" ]]; do
+    read -p "Ist dies ein Memberserver, ein Arbeitsplatz-Computer oder ein Notebook? [ms|pc|nb]: " membertype
+    membertype=`tolower $membertype`
+done
+
+if [[ $membertype == "pc" ]]; then
+    # create mount dir
+    mkdir /mnt/invis
+
+    echo "$pdc:/home /home nfs4 defaults 0 0" >> /etc/fstab
+    echo "$pdc:/shares /mnt/invis/shares nfs4 defaults 0 0" >> /etc/fstab
+
+    # Alles mounten, was nicht gemountet ist.
+    mount -a
+
+elif [[ $membertype == "nb" ]]; then
+    # create mount dir
+    mkdir /mnt/invis
+    # install openvpn
+    zypper -n in -n openvpn
+
+fi

@@ -1,0 +1,17 @@
+### Zypper Fehler ###
+
+Leider ist die Installation weiterer Software für Ihren Server fehlgeschlagen.
+
+Das Programm "zypper" hat einen uerwarteten Fehler gemeldet. Das bedeutet, 
+dass nicht alle zur Installation anstehenden Software-Pakete installiert
+werden konnten.
+
+Bitte wiederholen Sie den letzten Installationsschritt und achten Sie auf
+Fehlermeldungen.
+
+Notieren Sie sich etwaige Fehlermeldungen und teilen Sie sie uns über die
+invis-Server User-Mailingliste mit.
+
+http://www.invis-server.org/index.php?page=forum
+
+Ihr invis-Team.

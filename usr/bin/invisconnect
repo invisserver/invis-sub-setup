@@ -1,0 +1,90 @@
+#!/bin/bash
+# Script to establish a remote vpn connection to an invis-server
+# (c) 2015-2018 Stefan Schaefer -- invis-server.org
+# License GPLv3
+# Questions: info@invis-server.org
+
+# Dieses Script führt alle zur Installation eines invis Servers AD notwendigen 
+# Konfigurationsschritte aus.
+# Das Script sine nutzt /var/lib/sine als Arbeitsverzeichnis, hier sind von sine
+# verwendete Kontroll-, Variablen- und Protokolldateien zu finden.
+
+# Dieses Programm ist freie Software. Sie können es unter den Bedingungen der 
+# GNU General Public License, wie von der Free Software Foundation veröffentlicht,
+# weitergeben und/oder modifizieren, entweder gemäß Version 3 der Lizenz oder
+# (nach Ihrer Option) jeder späteren Version.
+
+# Die Veröffentlichung dieses Programms erfolgt in der Hoffnung, daß es Ihnen
+# von Nutzen sein wird, aber OHNE IRGENDEINE GARANTIE, sogar ohne die implizite 
+# Garantie der MARKTREIFE oder der VERWENDBARKEIT FÜR EINEN BESTIMMTEN ZWECK. 
+# Details finden Sie in der GNU General Public License.
+
+# Sie sollten ein Exemplar der GNU General Public License zusammen mit diesem 
+# Programm erhalten haben. Falls nicht, siehe <http://www.gnu.org/licenses/>. 
+
+# Funktionen
+# Werte aus Konfigurationsdatendatei extrahieren
+# Konfigurationsdaten
+confdir="/etc/invis-client"
+conffile="$confdir/invis-client.conf"
+passfile="$confdir/invis-pws.conf"
+
+# Funktionen
+# Werte aus Konfigurationsdatendatei extrahieren
+# $1 = Konfigurationsdatei, $2 = Parameter, $3 Wert (Feld)
+getconfdata() {
+    cat $1 |grep "$2" | cut -d ":" -f $3
+}
+
+# get data from configuration
+ovpnconf=`getconfdata $conffile "ovpnConf" "2"`
+mntpathbase=`getconfdata $conffile "mntPathBase" "2"`
+domain=`getconfdata $conffile "domain" "2"`
+invisip=`getconfdata $conffile "invisIP" "2"`
+
+# Waittime to establish the openvpn connection
+delay=20
+
+usage() {
+    echo -e "Geben Sie an, ob Sie die Verbindung zum Server aufbauen oder trennen möchten."
+    echo -e "Verbinden:\tinvisconnect c"
+    echo -e "Trennen:\tinvisconnect d"
+}
+
+case "$1" in
+    "c")
+	    # OpenVPN Verbindung aufbauen
+	    sudo /usr/sbin/openvpn --config $ovpnconf --daemon -log ovpnsession.log
+	    # invis Server Freigaben einhaengen
+	    echo "$delay Sekunden Wartezeit, bevor das Script fortgesetzt wird."
+	    sleep $delay
+	    # invis DNS Server nutzen
+	    # resolv.conf sichern
+	    sudo mv /etc/resolv.conf /etc/resolv.conf.ori
+	    # temporaere resolv.conf erzeugen
+	    sudo echo -e "search $domain" > /tmp/resolv.conf
+	    sudo echo -e "nameserver $invisip" >> /tmp/resolv.conf
+	    sudo mv /tmp/resolv.conf /etc/resolv.conf
+	    # Testen, ob Zielverzeichnisse vorhanden, wenn nicht anlegen.
+	    if [[ ! -d $mntpathbase ]]; then
+		sudo mkdir -p $mntpathbase/shares
+		sudo mkdir -p $mntpathbase/home
+	    fi
+	    # Freigaben einhaengen
+	    sudo mount -t nfs $invisip:/srv/nfs4_base/shares $mntpathbase/shares
+	    sudo mount -t nfs $invisip:/srv/nfs4_base/home $mntpathbase/home
+	    ;;
+	"d")
+	    # Freigaben aushaengen
+	    sudo umount $mntpathbase/shares
+	    sudo umount $mntpathbase/home
+	    # OpenVPN beenden
+	    openvpnpid=$(pgrep openvpn)
+	    sudo kill $openvpnpid
+	    # Urspruengliche resolv.conf wiederherstellen
+	    sudo mv /etc/resolv.conf.ori /etc/resolv.conf
+	    ;;
+	*)
+	    usage
+	    ;;
+esac
