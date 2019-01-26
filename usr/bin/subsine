@@ -221,8 +221,6 @@ case $1 in
 	    fi
 	done
 
-	# Zertifikate fuers Portal pruefen
-	getcertinfo
 	# Und Tschuess
 	textbox "$INFODIR/aftersetup.txt" "Installation abgeschlossen" "Beenden"
 

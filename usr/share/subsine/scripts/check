@@ -116,8 +116,8 @@ if [[ $prepok == "0" ]]; then
     bootdevice=`cat /etc/fstab |grep "/boot" | cut -d " " -f1`
     if [[ $bootdevice == md* ]]; then
 	for device in `mdadm -D /dev/$bootdevice |grep "/dev/sd" |tr "\t" " "| tr -s " " |cut -d " " -f8 |cut -d "1" -f1`; do
-	    echo "Grub2 wird im Master-Boot-Record von Festplatte $device installiert." 2>&1| tee -a $LOGFILE/sine.log | pgbox 25 110
-	    grub2-install $device 2>&1| tee -a $LOGFILE/sine.log | pgbox 25 110
+	    echo "Grub2 wird im Master-Boot-Record von Festplatte $device installiert." 2>&1| tee -a $LOGFILE/subsine.log | pgbox 25 110
+	    grub2-install $device 2>&1| tee -a $LOGFILE/subsine.log | pgbox 25 110
 	done
     fi
 
