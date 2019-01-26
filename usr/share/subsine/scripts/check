@@ -45,7 +45,7 @@ source $SINEINCLUDEDIR/functions
 modulename=`basename $0`
 
 # data privacy information
-textbox "$INFODIR/dataprivacy.txt" "Datenschutzinformationen" "Weiter"
+#textbox "$INFODIR/dataprivacy.txt" "Datenschutzinformationen" "Weiter"
 
 # are all requirements fullfilled?
 dialog --backtitle "$DIALOGTITLE - Modul: $modulename" --title "Installationvoraussetzungen" --exit-label "Weiter" --textbox "$INFODIR/setuprequires.txt" 0 0 --and-widget --backtitle "$DIALOGTITLE" --title "Installationvoraussetzungen"  --defaultno --yesno "Sind alle Voraussetungen erfüllt?" 0 0
@@ -67,32 +67,18 @@ if [[ $prepok == "0" ]]; then
     # enable Postfix
     chkservice "postfix"
 	
-    # get upgrade packages from spins:invis:common
-    pgsubtitle="Distributions-Upgrade wird durchgeführt" 
-    zypper -n dup --from spins_invis_15_common 2>&1| tee -a $LOGFILE | pgbox
-    zyppercheck ${PIPESTATUS[0]}
-
     # Patterns
-    pgsubtitle="Software-Gruppen werden installiert" 
-    zypper -n install -t pattern `cat $PACKAGELISTDIR/invis_schemes` 2>&1 | tee -a $LOGFILE | pgbox
-    zyppercheck ${PIPESTATUS[0]}
+    #pgsubtitle="Software-Gruppen werden installiert" 
+    #zypper -n install -t pattern `cat $PACKAGELISTDIR/invis_schemes` 2>&1 | tee -a $LOGFILE | pgbox
+    #zyppercheck ${PIPESTATUS[0]}
     # Basis Software
     pgsubtitle="Basis Software wird installiert" 
-    zypper -n install -n `cat $PACKAGELISTDIR/invis_base` 2>&1| tee -a $LOGFILE | pgbox 
+    zypper -n install -n `cat $PACKAGELISTDIR/invis_sub_base` 2>&1| tee -a $LOGFILE | pgbox 
     zyppercheck ${PIPESTATUS[0]}
 
     # ownCloud client
     pgsubtitle="ownCloud Client wird installiert" 
     zypper -n install -n --no-recommends owncloud-client 2>&1| tee -a $LOGFILE | pgbox 
-    zyppercheck ${PIPESTATUS[0]}
-
-    # Samba Pakete werden installiert
-    pgsubtitle="Samba wird installiert"
-
-    # Installation der invis-eigenen Samba-Pakete
-    zypper refresh 2>&1| tee -a $LOGFILE | pgbox
-    zyppercheck ${PIPESTATUS[0]}
-    zypper -n install -n `cat $PACKAGELISTDIR/samba-ad` 2>&1| tee -a $LOGFILE | pgbox
     zyppercheck ${PIPESTATUS[0]}
 
     # NFS-Server
