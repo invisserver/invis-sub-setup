@@ -65,7 +65,7 @@ country="DE"
 ok=0
 while (( $ok != "1" ));do
     dialog --backtitle "$DIALOGTITLE - Modul: $modulename" --title "Hauptserver" --form "$DIALOGSHORTHELP\n\n
-Geben Sie bitte den im Internet gültigen Namen Ihres zentralen invis-Serves ein." 18 74 5 \
+Geben Sie bitte den im Internet gültigen Namen Ihres zentralen invis-Serves ein." 18 74 3 \
     "FQDN invis-Server:" 2 2 "$masterfqdn" 2 20 45 0\
     2>$SINEWORKINGDIR/sine_temp
     exitcode=${?}
@@ -79,7 +79,7 @@ done
 ok=0
 while (( $ok != "2" ));do
     dialog --backtitle "$DIALOGTITLE - Modul: $modulename" --title "IT Dienstleister" --form "$DIALOGSHORTHELP\n\n
-Geben Sie bitte Kontaktdaten des für den Server verantwortlichen Administrators ein." 18 74 5 \
+Geben Sie bitte Kontaktdaten des für den Server verantwortlichen Administrators ein." 18 74 4 \
     "email:" 2 2 "$admail" 2 20 45 0\
     "Name:" 4 2 "$admin" 4 20 45 0\
     2>$SINEWORKINGDIR/sine_temp
