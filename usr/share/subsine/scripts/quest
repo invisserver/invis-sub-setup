@@ -192,7 +192,7 @@ exthttps=${?}
 if [[ $exthttps == "0" ]]; then
     ok=0
     while [[ $ok != "1" ]]; do
-	dialog --backtitle "$DIALOGTITLE - Modul: $modulename" --title "HTTPs Zugang" --inputbox "Geben Sie bitten den vollständigen Namen (FQDN) oder die IP-Adresse ein unter dem/der ihr invis Server erreichbar sein soll." 0 0 \
+	dialog --backtitle "$DIALOGTITLE - Modul: $modulename" --title "Fernzugang" --inputbox "Geben Sie bitten den vollständigen Namen (FQDN) oder die IP-Adresse ein unter dem/der ihr invis Server erreichbar sein soll." 0 0 \
 	2>$SINEWORKINGDIR/sine_temp2
 	exitcode=${?}
 	ddnshn=`cat $SINEWORKINGDIR/sine_temp2`
@@ -332,7 +332,7 @@ if [[ $mailrelay == "none" ]]; then
 else
     echo "SMTPRELAY:$mailrelay" >> $SINEWORKINGDIR/invis_confdata 
     echo "SMTPRUN:$smtpun" >> $SINEWORKINGDIR/invis_confdata 
-    echo "Relayhost Benutzer:SMTPRPW:$smtppw" >> $SINEWORKINGDIR/invis_pws 
+    echo "Relayhost Benutzer:SMTPRPW:$smtppw" > $SINEWORKINGDIR/invis_pws 
 fi
 if [[ $cleantr == "0" ]]; then
     echo "cleanTR:j" >> $SINEWORKINGDIR/invis_confdata
@@ -352,7 +352,7 @@ fi
 # Passwort fuer LDAP-Admin und junk erzeugen
 mysqlpw=`pwgen -sBnc 10 1`
 
-echo "Schlüsselpasswort:P12PW:$p12pw" > $SINEWORKINGDIR/invis_pws
+echo "Schlüsselpasswort:P12PW:$p12pw" >> $SINEWORKINGDIR/invis_pws
 echo "MySQL root:MySQLPW:$mysqlpw" >> $SINEWORKINGDIR/invis_pws
 
 chmod 0600 $SINEWORKINGDIR/invis_pws
