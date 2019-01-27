@@ -8,7 +8,7 @@
 # License: GPLv3
 # Questions: info@invis-server.org
 
-# Das Modul quest fragt alle wichtigen Umgebungsdaten ihres invis-Servers ab.
+# Das Modul quest fragt alle wichtigen Umgebungsdaten ihres invis-Sub-Servers ab.
 
 # This module asks for the environment data for your invis-server installation.
 
@@ -60,6 +60,20 @@ cidrmask=`ip address show intern|tr -s " "|grep "inet "|cut -d "/" -f2 |cut -d "
 vlongnmask=`cdr2mask $cidrmask`
 country="DE"
 #---#
+
+#---# invis-Server FQDN
+ok=0
+while (( $ok != "1" ));do
+    dialog --backtitle "$DIALOGTITLE - Modul: $modulename" --title "Hauptserver" --form "$DIALOGSHORTHELP\n\n
+Geben Sie bitte den im Internet gültigen Namen Ihres zentralen invis-Serves ein." 18 74 5 \
+    "FQDN invis-Server:" 2 2 "$masterfqdn" 2 20 45 0\
+    2>$SINEWORKINGDIR/sine_temp
+    exitcode=${?}
+    masterfqdn=`cat $SINEWORKINGDIR/sine_temp`
+    if [[ $masterfqdn =~ ^[a-zA-Z0-9_\-]{1,254}\.[a-zA-Z0-9_\-]{1,254}+\.?[a-zA-Z0-9_\-]{1,254}+\.[a-zA-Z]{1,5}$ ]];then
+	ok=1
+    fi
+done
 
 #---# Who is the admin
 ok=0
