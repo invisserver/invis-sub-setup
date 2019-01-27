@@ -55,9 +55,9 @@ textbox "$INFODIR/setupquestions.txt" "Wir hätten da ein paar Fragen an Sie." "
 # possible, that we don't need this anymore
 vhn=`hostname -s`
 vdomname=`hostname -d`
-vipaddr=`ip address show intern|tr -s " "|grep "inet "|cut -d "/" -f1 | cut -d " " -f3`
-cidrmask=`ip address show intern|tr -s " "|grep "inet "|cut -d "/" -f2 |cut -d " " -f1`
-vlongnmask=`cdr2mask $cidrmask`
+#vipaddr=`ip address show intern|tr -s " "|grep "inet "|cut -d "/" -f1 | cut -d " " -f3`
+#cidrmask=`ip address show intern|tr -s " "|grep "inet "|cut -d "/" -f2 |cut -d " " -f1`
+#vlongnmask=`cdr2mask $cidrmask`
 country="DE"
 #---#
 
@@ -65,12 +65,47 @@ country="DE"
 ok=0
 while (( $ok != "1" ));do
     dialog --backtitle "$DIALOGTITLE - Modul: $modulename" --title "Hauptserver" --form "$DIALOGSHORTHELP\n\n
-Geben Sie bitte den im Internet gültigen Namen Ihres zentralen invis-Serves ein." 18 74 3 \
-    "FQDN invis-Server:" 2 2 "$masterfqdn" 2 20 45 0\
-    2>$SINEWORKINGDIR/sine_temp
+Geben Sie bitte den im Internet gültigen Namen Ihres zentralen invis-Serves ein." 14 74 3 \
+    "FQDN invis-Server:" 2 2 "$masterfqdn" 2 22 45 0\
+    2>$SINEWORKINGDIR/sine_temp2
     exitcode=${?}
-    masterfqdn=`cat $SINEWORKINGDIR/sine_temp`
+    masterfqdn=`cat $SINEWORKINGDIR/sine_temp2`
     if [[ $masterfqdn =~ ^[a-zA-Z0-9_\-]{1,254}\.[a-zA-Z0-9_\-]{1,254}+\.?[a-zA-Z0-9_\-]{1,254}+\.[a-zA-Z]{1,5}$ ]];then
+	ok=1
+    fi
+done
+
+#---# VPN Certificate Data
+ok=0
+while (( $ok != "2" ));do
+    dialog --backtitle "$DIALOGTITLE - Modul: $modulename" --title "VPN Zertifikat" --form "$DIALOGSHORTHELP\n\n
+Geben Sie bitte den Pfad zum Zertifikatscontainer (P12) und das zugehörige Passwort ein." 14 74 3 \
+    "Pfad:" 1 2 "$p12path" 1 20 45 0\
+    "Passwort:" 3 2 "$p12pw" 3 20 45 0\
+    2>$SINEWORKINGDIR/sine_temp2
+    exitcode=${?}
+    p12data=(`cat $SINEWORKINGDIR/sine_temp2`)
+    if [[ -f "${p12data[0]}" ]];then
+	p12path="${p12data[0]}"
+	(( ok=$ok + 1 ))
+    fi
+
+    if (( ${#p12data[1]} >= 5 ));then
+	p12pw="${p12data[1]}"
+	(( ok=$ok + 1 ))
+    fi
+done
+
+#---# AD Domain
+ok=0
+while (( $ok != "1" ));do
+    dialog --backtitle "$DIALOGTITLE - Modul: $modulename" --title "AD Domäne" --form "$DIALOGSHORTHELP\n\n
+Geben Sie bitte die ActiveDirectory Domäne Ihres zentralen invis-Serves ein." 14 74 3 \
+    "AD Domäne:" 2 2 "$addomain" 2 22 45 0\
+    2>$SINEWORKINGDIR/sine_temp2
+    exitcode=${?}
+    addomain=`cat $SINEWORKINGDIR/sine_temp2`
+    if [[ $addomain =~ ^[a-zA-Z0-9_\-]{1,254}+\.?[a-zA-Z0-9_\-]{1,254}+\.[a-zA-Z]{1,5}$ ]];then
 	ok=1
     fi
 done
@@ -79,12 +114,12 @@ done
 ok=0
 while (( $ok != "2" ));do
     dialog --backtitle "$DIALOGTITLE - Modul: $modulename" --title "IT Dienstleister" --form "$DIALOGSHORTHELP\n\n
-Geben Sie bitte Kontaktdaten des für den Server verantwortlichen Administrators ein." 18 74 4 \
-    "email:" 2 2 "$admail" 2 20 45 0\
-    "Name:" 4 2 "$admin" 4 20 45 0\
-    2>$SINEWORKINGDIR/sine_temp
+Geben Sie bitte Kontaktdaten des für den Server verantwortlichen Administrators ein." 14 74 3 \
+    "email:" 1 2 "$admail" 1 20 45 0\
+    "Name:" 3 2 "$admin" 3 20 45 0\
+    2>$SINEWORKINGDIR/sine_temp2
     exitcode=${?}
-    admincontact=(`cat $SINEWORKINGDIR/sine_temp`)
+    admincontact=(`cat $SINEWORKINGDIR/sine_temp2`)
     if [[ ${admincontact[0]} =~ ^[a-zA-Z0-9-]+([._a-zA-Z0-9.-]+)*@[a-zA-Z0-9.-]+\.([a-zA-Z]{2,4}) ]];then
 	admail="${admincontact[0]}"
 	(( ok=$ok + 1 ))
@@ -106,12 +141,12 @@ Routers, DNS Server des Internet Zugangs Providers oder unabhängige DNS-Server 
 Achtung:
 Prüfen Sie bitte, ob die angegebenen DNS-Server auf Anfragen antworten, da ansonsten sowohl die weitere
 Installation, als auch der Betrieb des invis-Servers beeinträchtigt wird.\n\n
-Geben Sie midestens eine IP-Adresse ein.\n\n" 26 70 6 \
-    "DNS 1:" 2 2 "${fdns[0]}" 2 10 30 0\
-    "DNS 2:" 4 2 "${fdns[1]}" 4 10 30 0\
-    "DNS 3:" 6 2 "${fdns[2]}" 6 10 30 0\
-    2>$SINEWORKINGDIR/sine_temp
-    fdns=(`cat $SINEWORKINGDIR/sine_temp`)
+Geben Sie midestens eine IP-Adresse ein.\n\n" 25 70 5 \
+    "DNS 1:" 1 2 "${fdns[0]}" 1 10 30 0\
+    "DNS 2:" 3 2 "${fdns[1]}" 3 10 30 0\
+    "DNS 3:" 5 2 "${fdns[2]}" 5 10 30 0\
+    2>$SINEWORKINGDIR/sine_temp2
+    fdns=(`cat $SINEWORKINGDIR/sine_temp2`)
 
     if (( ${#fdns[@]} == 0 )); then
 	continue
@@ -147,8 +182,8 @@ Welche Lösung möchten Sie einsetzen?\n\n" 17 80 7 \
     nagios "Nagios-Plugins (Icinga & Nagios)" on\
     zabbix "Zabbix-Agent" off\
     keine  "Keine Überwachung" off\
-    2>$SINEWORKINGDIR/sine_temp
-    whichmonitoring=`cat $SINEWORKINGDIR/sine_temp`
+    2>$SINEWORKINGDIR/sine_temp2
+    whichmonitoring=`cat $SINEWORKINGDIR/sine_temp2`
 
 #---# DDNS    
 yesno "Soll Ihr invis Server via Internet (SSH) erreichbar sein?\n\nVoraussetzung dafür ist ein etwa bei DynDNS.org registrierter Hostname, Zugriff auf einen eigenen DNS Server im Internet oder eine feste IP-Adresse." "HTTPs Zugang"
@@ -158,9 +193,9 @@ if [[ $exthttps == "0" ]]; then
     ok=0
     while [[ $ok != "1" ]]; do
 	dialog --backtitle "$DIALOGTITLE - Modul: $modulename" --title "HTTPs Zugang" --inputbox "Geben Sie bitten den vollständigen Namen (FQDN) oder die IP-Adresse ein unter dem/der ihr invis Server erreichbar sein soll." 0 0 \
-	2>$SINEWORKINGDIR/sine_temp
+	2>$SINEWORKINGDIR/sine_temp2
 	exitcode=${?}
-	ddnshn=`cat $SINEWORKINGDIR/sine_temp`
+	ddnshn=`cat $SINEWORKINGDIR/sine_temp2`
 	
 	# Doch noch abbrechen
 	if [[ $exitcode == "1" || $exitcode == "255" ]]; then
@@ -188,7 +223,7 @@ Geben Sie bitte den Hostnamen bzw. die IP-Adresse Ihres SMTP-Relays, sowie den z
 	"Port [25/587]:" 4 2 "$smtpport" 4 20 45 0\
 	"Benutzername:" 6 2 "$smtpun" 6 20 45 0\
 	"Passwort:" 8 2 "$smtppw" 8 20 45 0\
-	2>$SINEWORKINGDIR/sine_temp
+	2>$SINEWORKINGDIR/sine_temp2
 	exitcode=${?}
 	# Doch noch abbrechen
 	if [[ $exitcode == "1" || $exitcode == "255" ]]; then
@@ -196,7 +231,7 @@ Geben Sie bitte den Hostnamen bzw. die IP-Adresse Ihres SMTP-Relays, sowie den z
 	    break
 	fi
 	
-	smtpvalues=(`cat $SINEWORKINGDIR/sine_temp`)
+	smtpvalues=(`cat $SINEWORKINGDIR/sine_temp2`)
 	
 	if [[ ${smtpvalues[0]} =~ ^[a-zA-Z0-9_\-]{1,254}\.[a-zA-Z0-9_\-]{1,254}+\.?[a-zA-Z0-9_\-]{1,254}+\.[a-zA-Z]{1,5}$ || ${smtpvalues[0]} =~ ^(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$ ]] ;then
 	    mailserver="${smtpvalues[0]}"
@@ -248,8 +283,8 @@ if [[ $cleantr == "0" ]]; then
     "21 Tage" "3 Wochen" off\
     "42 Tage" "6 Wochen" on\
     "90 Tage" "3 Monate" off\
-    2>$SINEWORKINGDIR/sine_temp
-    trdays=`cat $SINEWORKINGDIR/sine_temp|cut -d " " -f1`
+    2>$SINEWORKINGDIR/sine_temp2
+    trdays=`cat $SINEWORKINGDIR/sine_temp2|cut -d " " -f1`
 fi
 
 #   regelmässige Virenscans
@@ -271,34 +306,15 @@ HTTPS Port (invis-Portal): $httpsport\n\n
 Aus Ihrem lokalen Netz heraus kann für SSH weiter Port 22 verwendet werden." "SSH und HTTPS Port"
 
 # Alle Daten in Kontrolldatei Schreiben
-echo "Country:$country" > $SINEWORKINGDIR/invis_confdata
-echo "Region:$region" >> $SINEWORKINGDIR/invis_confdata
-echo "City:$city" >> $SINEWORKINGDIR/invis_confdata
-echo "Organisation:$organisation" >> $SINEWORKINGDIR/invis_confdata
-echo "certMail:$certmail" >> $SINEWORKINGDIR/invis_confdata
-echo "certOwner:$certowner" >> $SINEWORKINGDIR/invis_confdata
 
-echo "Admail:$admail" >> $SINEWORKINGDIR/invis_confdata
+echo "Admail:$admail" > $SINEWORKINGDIR/invis_confdata
 echo "Admin:$admin" >> $SINEWORKINGDIR/invis_confdata
 
-echo "Hostname:$hn" >> $SINEWORKINGDIR/invis_confdata
-echo "Domain:$domain" >> $SINEWORKINGDIR/invis_confdata
-echo "FQDN:$hn.$domain" >> $SINEWORKINGDIR/invis_confdata
-echo "baseDN:$ldapbase" >> $SINEWORKINGDIR/invis_confdata
-echo "Workgroup:$smbdomain" >> $SINEWORKINGDIR/invis_confdata
-echo "IP:$ipaddr" >> $SINEWORKINGDIR/invis_confdata
-echo "Networkbase:$netaddr" >> $SINEWORKINGDIR/invis_confdata
-echo "NMask-short:$shortnmask" >> $SINEWORKINGDIR/invis_confdata
-echo "NMask-long:$longnmask" >> $SINEWORKINGDIR/invis_confdata
-echo "Broadcast:$bcastaddr" >> $SINEWORKINGDIR/invis_confdata
-echo "ReverseDom:$revnet" >> $SINEWORKINGDIR/invis_confdata
+echo "P12Path:$p12path" >> $SINEWORKINGDIR/invis_confdata
+
+echo "Workgroup:$addomain" >> $SINEWORKINGDIR/invis_confdata
 echo "Forwarders:$forwarders"  >> $SINEWORKINGDIR/invis_confdata
 
-echo "Groupware:$whichgroupware"  >> $SINEWORKINGDIR/invis_confdata
-if [[ $whichgroupware == "kopano" ]]; then
-    echo "KopanoRepo:$whichkopanorep"  >> $SINEWORKINGDIR/invis_confdata
-fi
-echo "ERPSoftware:$whicherp" >> $SINEWORKINGDIR/invis_confdata
 echo "MonitoringSoftware:$whichmonitoring" >> $SINEWORKINGDIR/invis_confdata
 echo "SSHPORT:$sshport" >> $SINEWORKINGDIR/invis_confdata
 echo "HTTPSPORT:$httpsport" >> $SINEWORKINGDIR/invis_confdata
@@ -325,24 +341,19 @@ else
     echo "cleanTR:n" >> $SINEWORKINGDIR/invis_confdata
 fi
 
-if [[ $cleandasi == "0" ]]; then
-    echo "cleanDasi:j" >> $SINEWORKINGDIR/invis_confdata
-    echo "DasimaxDays:$trdays" >> $SINEWORKINGDIR/invis_confdata
-else
-    echo "cleanDasi:n" >> $SINEWORKINGDIR/invis_confdata
-fi
+#if [[ $cleandasi == "0" ]]; then
+#    echo "cleanDasi:j" >> $SINEWORKINGDIR/invis_confdata
+#    echo "DasimaxDays:$trdays" >> $SINEWORKINGDIR/invis_confdata
+#else
+#    echo "cleanDasi:n" >> $SINEWORKINGDIR/invis_confdata
+#fi
 
 # Create passwords and write them in invis_pws
 # Passwort fuer LDAP-Admin und junk erzeugen
-ldappw=`pwgen -sBnc 10 1`
-junkpw=`pwgen -sBnc 10 1`
 mysqlpw=`pwgen -sBnc 10 1`
-ntoppw=`pwgen -sBnc 10 1`
 
-echo "LDAP Administrator:LDAPAdminPW:$ldappw" >> $SINEWORKINGDIR/invis_pws
-echo "Spam owner:JunkPW:$junkpw" >> $SINEWORKINGDIR/invis_pws
+echo "Schlüsselpasswort:P12PW:$p12pw" > $SINEWORKINGDIR/invis_pws
 echo "MySQL root:MySQLPW:$mysqlpw" >> $SINEWORKINGDIR/invis_pws
-echo "NTOP Administrator:NtopPW:$ntoppw" >> $SINEWORKINGDIR/invis_pws
 
 chmod 0600 $SINEWORKINGDIR/invis_pws
 
@@ -350,5 +361,4 @@ chmod 0600 $SINEWORKINGDIR/invis_pws
 IFS=$oldifs
     
 # Temporaermuell loeschen
-rm -f ./sine_temp
-
+rm -f ./sine_temp2

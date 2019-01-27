@@ -1,4 +1,5 @@
-Im Folgenden werden einige Informationen für die weitere Einrichtung Ihres invis Servers abgefragt.
+Im Folgenden werden einige Informationen für die weitere Einrichtung Ihres invis Filial-Servers
+abgefragt.
 
 Wir empfehlen Ihnen sich die gegebenen Antworten, speziell wenn es sich um Passwörter handelt,
 mitzuprotokollieren.
