@@ -1,4 +1,5 @@
 1:d:check
 2:d:quest
 3:d:sysprep
-4:d:openvpn
+4:d:nameserver
+5:d:openvpn

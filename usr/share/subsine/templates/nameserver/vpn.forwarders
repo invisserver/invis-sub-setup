@@ -1,0 +1,5 @@
+acl forwarders {
+	ip-dc;
+	fw1;
+	fw2;
+}

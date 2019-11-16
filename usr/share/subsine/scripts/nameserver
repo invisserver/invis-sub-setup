@@ -1,16 +1,16 @@
 #!/bin/bash
-### MODUL-NR. 005 ### 
+### MODUL-NR. 004 ###
 # (c) August 2008 Stefan Schäfer / FSP Computer & Netzwerke
-# (c) 2009-2018 Stefan Schäfer / invis-server.org / stefan@invis-server.org
+# (c) 2009-2017 Stefan Schäfer / invis-server.org / stefan@invis-server.org
 # (c) 2013,2014 Dimitri Asarowski / invis-server.org / dimitri@invis-server.org
 # (c) 2013-2017 Ingo Göppert / invis-server.org / ingo@invis-server.org
 
 # License: GPLv3
 # Questions: info@invis-server.org
 
-# openVPN Einrichten
+# Das Modul fileserver richtet die Netzwerkfreigaben des invis-Servers ein
 
-# openVPN setup
+# The module fileserver sets up the invis-server network shares
 
 # Dieses Programm ist freie Software. Sie können es unter den Bedingungen der 
 # GNU General Public License, wie von der Free Software Foundation veröffentlicht,
@@ -44,42 +44,17 @@ source $SINEINCLUDEDIR/functions
 modulename=`basename $0`
 
 clear
-windowtitle="openVPN"
-pgsubtitle="Setup openVPN"
+windowtitle="Nameserver"
+pgsubtitle="Caching only Nameserver einrichten"
 
-dialog --backtitle "$DIALOGTITLE - Modul: $modulename" --title "$windowtitle" --exit-label "Weiter" --textbox "$INFODIR/openvpn.txt" 38 92
+ipaddr=`getconfdata "IP" "2"`
 
-pgsubtitle="openvpn wird installiert" 
-zypper refresh 2>&1 | tee -a $LOGFILE  |pgbox
-zypper -n install -n openvpn 2>&1 | tee -a $LOGFILE | pgbox
-zyppercheck ${PIPESTATUS[0]}
+# Konfiguration von bind wird angepasst
+path="/etc"
+file="named.conf"
+strings="FORWARD-DNS-SERVERS%$forwarders"
+changevalues $path $file "$strings"
 
-# create client configuration
-cp $TEMPLATEDIR/$modulename/invis-sub-server.conf /etc/openvpn
-path="/etc/openvpn"
-file="invis-sub-server.conf"
-
-masterfqdn=`getconfdata "MasterFQDN" "2"`
-string="openvpn_server%$masterfqdn"
-changevalues $path $file "$string"
-
-# Client key
-p12pw=`getpassword "P12PW" "3"`
-keydir="/etc/openvpn/keys"
-mkdir $keydir
-echo $p12pw > $keydir/pw
-chmod 0600 $keydir/pw
-
-keyfile=`getconfdata "P12Path" "2"`
-cp $keyfile $keydir
-
-p12path=$keydir/`basename $keyfile`
-string="p12path%$p12path"
-changevalues $path $file "$string"
-
-# openvpn ins Runlevel-Konzept integrieren und starten
-# Seit openSUSE 13.1 bekommt jede openvpn-Konfiguration ein eigenes systemd Service-File
-# Start und Stop koennen damit fuer jede Konfiguration einzeln erfolgen.
-cp /usr/lib/systemd/system/openvpn@.service /usr/lib/systemd/system/openvpn@invis-sub-server.service
-chkservice "openvpn@invis-sub-server"
-
+# Anpassen der Datei /etc/resolv.conf
+cp $TEMPLATEDIR/dns/resolv.conf /etc 2>&1| tee -a $LOGFILE | pgbox
+file="resolv.conf"
