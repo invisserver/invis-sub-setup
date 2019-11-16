@@ -1,8 +1,8 @@
 #!/bin/bash
 # Kategorie: apps
 # script to manage headless owncloud synchronization
-# Version 1.0
-# (c) Mai 2018 Stefan Schäfer / invis-server.org
+# Version 1.0 - invis-sub-server
+# (c) Mai 2019 Stefan Schäfer / invis-server.org
 
 # License: GPLv3
 # Questions: info@invis-server.org
@@ -42,7 +42,7 @@
 
 #Konfigurationsdaten
 confdir="/etc/invis"
-conffile="$confdir/invis.conf"
+conffile="$confdir/invis-sub.conf"
 
 #functions
 usage() {
@@ -83,7 +83,10 @@ getfullname() {
 }
 
 # ext Hostnamen lesen
-fqdn=`getconfdata "$conffile" "fqdn" 2`
+fqdn=`getconfdata "$conffile" "fqdnmainsrv" 2`
+
+# minimale Passwortlaenge, sollte der im AD des invis-Servers festgelegten Länge entsprechen.
+minlength=7
 
 # configuration variables
 ocaccountdir="/var/lib/sine/oc"
@@ -123,15 +126,15 @@ Geben Sie bitte Benutzername, Passwort und Zielverzeichnis der Synchronisation e
 
 	    # Werte pruefen
 	    # Benutzer muss existieren und Mitglied der Gruppe owncloud sein
-	    if [[ `getent passwd |grep "^${ocacc[0]}:"` && `samba-tool group listmembers owncloud | grep "^${ocacc[0]}"` ]]; then
+	    if [[ `getent passwd |grep "^${ocacc[0]}:"` ]]; then
 		((ok=1))
 	    else
-		msgbox "Der Benutzer \"${ocacc[0]}\" existiert nicht oder ist nicht Mitglied der Gruppe \"owncloud\"."
+		msgbox "Der Benutzer \"${ocacc[0]}\" existiert nicht."
 	    fi
 
 	    # Passworteingabe minimal pruefen, es kann nicht korrekt sein, wenn das eingegebene PW kuerzer ist als
 	    # die im AD gesetzte minimale Laenge. Ist nicht perfekt aber ein Anfang. Besser waere ein Loginversuch...
-	    minlength=`samba-tool domain passwordsettings show |tr -d " " |grep Minimumpasswordlength|cut -d ":" -f2`
+	    #minlength=`samba-tool domain passwordsettings show |tr -d " " |grep Minimumpasswordlength|cut -d ":" -f2`
 	    # Passwort muss laenger sein als die gesetzte minimale Laenge
 	    if (( ${#ocacc[1]} >= $minlength )); then
 		((ok=$ok + 1))
