@@ -1,0 +1,15 @@
+[Unit]
+Description=Clamav antivirus Deamon
+After=network.target freshclam.service
+Requires=freshclam.service
+
+[Service]
+Type=forking
+ExecStart=/usr/sbin/clamd
+TimeoutSec=300
+;User=vscan
+;Group=vscan
+;PrivateTmp=yes
+
+[Install]
+WantedBy=multi-user.target

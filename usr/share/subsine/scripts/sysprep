@@ -94,12 +94,14 @@ if [[ $av == "clamav" ]]; then
     zypper -n install -n clamav 2>&1| tee -a $LOGFILE | pgbox
     zyppercheck ${PIPESTATUS[0]}
     cp $TEMPLATEDIR/$modulename/clamav/clamd.conf /etc 	2>&1| tee -a $LOGFILE
-    cp $TEMPLATEDIR/$modulename/clamav/freshclam.conf /etc 	2>&1| tee -a $LOGFILE
+    cp $TEMPLATEDIR/$modulename/clamav/freshclam.conf /etc/ 	2>&1| tee -a $LOGFILE
+    cp $TEMPLATEDIR/$modulename/clamav/clamd.service /etc/systemd/system/ 	2>&1| tee -a $LOGFILE
     touch /var/log/clamd.log 				2>&1| tee -a $LOGFILE
     chown vscan:vscan /var/log/clamd.log 			2>&1| tee -a $LOGFILE
     touch /var/log/freshclam.log 				2>&1| tee -a $LOGFILE
     chown vscan:vscan /var/log/freshclam.log 		2>&1| tee -a $LOGFILE
     freshclam 2>&1| tee -a $LOGFILE | pgbox
+    systemctl daemon-reload
     chkservice "freshclam"
     chkservice "clamd"
 else  
