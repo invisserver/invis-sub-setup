@@ -186,7 +186,7 @@ Welche Lösung möchten Sie einsetzen?\n\n" 17 80 7 \
     whichmonitoring=`cat $SINEWORKINGDIR/sine_temp2`
 
 #---# DDNS    
-yesno "Soll Ihr invis Server via Internet (SSH) erreichbar sein?\n\nVoraussetzung dafür ist ein etwa bei DynDNS.org registrierter Hostname, Zugriff auf einen eigenen DNS Server im Internet oder eine feste IP-Adresse." "HTTPs Zugang"
+yesno "Soll Ihr invis Filial-Server via Internet (SSH) erreichbar sein?\n\nVoraussetzung dafür ist ein etwa bei DynDNS.org registrierter Hostname, Zugriff auf einen eigenen DNS Server im Internet oder eine feste IP-Adresse." "HTTPs Zugang"
 exthttps=${?}
     
 if [[ $exthttps == "0" ]]; then
@@ -307,7 +307,9 @@ Aus Ihrem lokalen Netz heraus kann für SSH weiter Port 22 verwendet werden." "S
 
 # Alle Daten in Kontrolldatei Schreiben
 
-echo "Admail:$admail" > $SINEWORKINGDIR/invis_confdata
+echo "MasterFQDN:$masterfqdn" > $SINEWORKINGDIR/invis_confdata
+
+echo "Admail:$admail" >> $SINEWORKINGDIR/invis_confdata
 echo "Admin:$admin" >> $SINEWORKINGDIR/invis_confdata
 
 echo "P12Path:$p12path" >> $SINEWORKINGDIR/invis_confdata

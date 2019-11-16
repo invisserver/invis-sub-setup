@@ -89,7 +89,7 @@ fqdn=`getconfdata "$conffile" "fqdnmainsrv" 2`
 minlength=7
 
 # configuration variables
-ocaccountdir="/var/lib/sine/oc"
+ocaccountdir="/var/lib/subsine/oc"
 ocaccountfile="ocaccounts"
 ocsrvurl="https://$fqdn/owncloud/remote.php/webdav"
 
