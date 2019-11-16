@@ -73,6 +73,10 @@ chmod 0600 $keydir/pw
 keyfile=`getconfdata "P12Path" "2"`
 cp $keyfile $keydir
 
+p12path=$keydir/`basename $keyfile`
+string="p12path%$p12path"
+changevalues $path $file "$string"
+
 # openvpn ins Runlevel-Konzept integrieren und starten
 # Seit openSUSE 13.1 bekommt jede openvpn-Konfiguration ein eigenes systemd Service-File
 # Start und Stop koennen damit fuer jede Konfiguration einzeln erfolgen.
