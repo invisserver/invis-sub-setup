@@ -54,25 +54,24 @@ zypper refresh 2>&1 | tee -a $LOGFILE  |pgbox
 zypper -n install -n openvpn 2>&1 | tee -a $LOGFILE | pgbox
 zyppercheck ${PIPESTATUS[0]}
 
-# create server configuration
+# create client configuration
 cp $TEMPLATEDIR/$modulename/invis-sub-server.conf /etc/openvpn
 path="/etc/openvpn"
 file="invis-sub-server.conf"
-
-domain=`getconfdata "Domain" "2"`
-string="invis-net.loc%$domain"
-changevalues $path $file "$string"
-
 
 ddns=`getconfdata "DDNS" "2"`
 string="openvpn_server%$ddns"
 changevalues $path $file "$string"
 
-# key management
-earsadir="/etc/easy-rsa/$domain"
+# Client key
+p12pw=`getpassword "P12PW" "3"`
 keydir="/etc/openvpn/keys"
 mkdir $keydir
-cp $earsadir/ca.crt $keydir
+echo $p12pw > $keydir/pw
+chmod 0600 $keydir/pw
+
+keyfile=`getconfdata "P12Path" "2"`
+cp $keyfile $keydir
 
 # openvpn ins Runlevel-Konzept integrieren und starten
 # Seit openSUSE 13.1 bekommt jede openvpn-Konfiguration ein eigenes systemd Service-File
