@@ -47,10 +47,12 @@ if [[ `ip a |grep "vpn:"` ]]; then
     if [[ `ls -l /etc/named.d/named.forwarder |grep direct` ]]; then
 	ln -fs /etc/named.d/vpn.forwarders /etc/named.d/named.forwarder
 	systemctl reload named.service
+	rndc flush
     fi
 else
     if [[ `ls -l /etc/named.d/named.forwarder |grep vpn` ]]; then
 	ln -fs /etc/named.d/direct.forwarders /etc/named.d/named.forwarder
 	systemctl reload named.service
+	rndc flush
     fi
 fi
