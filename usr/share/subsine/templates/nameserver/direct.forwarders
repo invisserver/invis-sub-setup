@@ -1,4 +1,3 @@
-acl forwarders {
-	9.9.9.9;
-	1.1.1.1;
+acl forwarder {
+	fwstring
 }

@@ -1,5 +1,4 @@
-acl forwarders {
+acl forwarder {
 	ip-dc;
-	fw1;
-	fw2;
+	fwstring
 }

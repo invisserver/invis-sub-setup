@@ -47,21 +47,39 @@ clear
 windowtitle="Nameserver"
 pgsubtitle="Caching only Nameserver einrichten"
 
-ipaddr=`getconfdata "IP" "2"`
 
 # named.conf template kopieren
 old /etc/named.conf 2>&1| tee -a $LOGFILE | pgbox
 cp $TEMPLATEDIR/dns/named.conf /etc 2>&1| tee -a $LOGFILE | pgbox
+cp $TEMPLATEDIR/dns/direct.forwarders /etc/named.d 2>&1| tee -a $LOGFILE | pgbox
+cp $TEMPLATEDIR/dns/vpn.forwarders /etc/named.d 2>&1| tee -a $LOGFILE | pgbox
 
-# Konfiguration von bind wird angepasst
-path="/etc"
-file="named.conf"
-strings="FORWARD-DNS-SERVERS%$forwarders"
-changevalues $path $file "$strings"
+# Link anlegen
+ln -fs /etc/named.d/direct.forwarders /etc/named.d/named.forwarder
+
+# forwarders in beiden Dateien anpassen
+# Konfigurationsdaten ermitteln
+ipmaster=`getconfdata "MasterIP" "2"`
+fwstring=`getconfdata "Forwarders" "2"`
+
+path="/etc/named.d/"
+file="vpn.forwarders"
+string="fwstring%$fwstring"
+changevalues $path $file "$string"
+
+file="vpn.forwarders"
+string="ip-dc%$ipmaster"
+changevalues $path $file "$string"
+
+file="direct.forwarders"
+string="fwstring%$fwstring"
+changevalues $path $file "$string"
+
+# Nameserver bind in Autostart und starten
+chkservice "named"
 
 # Forwarder auf bind umstellen
 sysconf_addword -r /etc/sysconfig/network/config NETCONFIG_DNS_FORWARDER bind 2>&1| tee -a $LOGFILE | pgbox 
-
 
 # Anpassen der Datei /etc/resolv.conf
 #cp $TEMPLATEDIR/dns/resolv.conf /etc 2>&1| tee -a $LOGFILE | pgbox

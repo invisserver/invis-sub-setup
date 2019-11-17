@@ -17,3 +17,6 @@ MAILTO=/dev/null
 
 # ownCloud Synchronisation lokal
 */15 * * * * root /usr/bin/ocsubsync sync
+
+# Ggf. Forwarder anpassen
+*/2 * * * * root /usr/bin/switchforwarder
