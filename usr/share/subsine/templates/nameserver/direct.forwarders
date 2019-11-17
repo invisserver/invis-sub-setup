@@ -1,3 +1,1 @@
-acl forwarder {
-	fwstring
-}
+forwarders { fwstring };
