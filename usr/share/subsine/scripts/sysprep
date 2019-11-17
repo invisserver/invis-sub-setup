@@ -77,17 +77,17 @@ mkdir /var/spool/infected
 av=`getconfdata "AV" "2"`
 avcron=`getconfdata "AVCRON" "2"`
 
-# Der ausgewaehlte Virenscanner wird in invis.conf eingetragen
+# Der ausgewaehlte Virenscanner wird in invis-sub.conf eingetragen
 string="AV:clamav%AV:$av"
-changevalues $INVISCONFDIR "invis.conf" "$string"
+changevalues $INVISCONFDIR "invis-sub.conf" "$string"
     
 # Eintragen, ob regelmaeßig auf Viren geprueft wird.
 string="avCheck:j%avCheck:$avcron"
-changevalues $INVISCONFDIR "invis.conf" "$string"
+changevalues $INVISCONFDIR "invis-sub.conf" "$string"
 
 # add invis-Version to config-file
 string="invisversion%$INVISVERSION"
-changevalues $INVISCONFDIR "invis.conf" "$string"
+changevalues $INVISCONFDIR "invis-sub.conf" "$string"
 
 pgsubtitle="Der Virenscanner ClamAV wird installiert, aktualisiert und aktiviert.\nAls globales Quarantäneverzeichnis wurde /var/spool/infected angelegt."
 if [[ $av == "clamav" ]]; then 
