@@ -49,12 +49,21 @@ pgsubtitle="Caching only Nameserver einrichten"
 
 ipaddr=`getconfdata "IP" "2"`
 
+# named.conf template kopieren
+old /etc/named.conf 2>&1| tee -a $LOGFILE | pgbox
+cp $TEMPLATEDIR/dns/named.conf /etc 2>&1| tee -a $LOGFILE | pgbox
+
 # Konfiguration von bind wird angepasst
 path="/etc"
 file="named.conf"
 strings="FORWARD-DNS-SERVERS%$forwarders"
 changevalues $path $file "$strings"
 
+# Forwarder auf bind umstellen
+sysconf_addword -r /etc/sysconfig/network/config NETCONFIG_DNS_FORWARDER bind 2>&1| tee -a $LOGFILE | pgbox 
+
+
 # Anpassen der Datei /etc/resolv.conf
-cp $TEMPLATEDIR/dns/resolv.conf /etc 2>&1| tee -a $LOGFILE | pgbox
-file="resolv.conf"
+#cp $TEMPLATEDIR/dns/resolv.conf /etc 2>&1| tee -a $LOGFILE | pgbox
+#file="resolv.conf"
+
