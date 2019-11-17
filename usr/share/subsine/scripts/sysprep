@@ -167,6 +167,9 @@ cp $TEMPLATEDIR/$modulename/security/limits.conf /etc/security/ 2>&1| tee -a $LO
 ## prepare sysconfig variables
 ipaddr=`getconfdata "IP" "2"`
 
+# copy corrected file to /etc/sysconfig/network
+cp $TEMPLATEDIR/$modulename/sysconfig/config /etc/sysconfig/network 2>&1| tee -a $LOGFILE | pgbox
+
 pgsubtitle="Globale Systemkonfigurationsvariablen werden gesetzt."
 # dhcpd
 #echo "Globale DHCP Server-Konfiguration wird angepasst." 2>&1| tee -a $LOGFILE | pgbox
