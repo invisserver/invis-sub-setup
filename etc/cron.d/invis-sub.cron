@@ -3,6 +3,9 @@ PATH="/sbin:/usr/sbin:/usr/local/sbin:/root/bin:/usr/local/bin:/usr/bin:/bin:/us
 # Email Versand fuer die invis cron-jobs deaktiviert. Es sind einfach zu viele Mails
 MAILTO=/dev/null
 
+# DNS Cache leeren nach jedem Reboot
+@reboot root sleep 10 && /usr/sbin/rndc flush
+
 # regelmaessiges Pruefen der Internetverbindung und Wiederaufbau bei Bedarf
 # alle 10 Minuten
 */10 * * * * root /usr/local/bin/inetcheck
