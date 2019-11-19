@@ -124,6 +124,7 @@ fi
 echo -e "Sie benötigen jetzt das Passwort des Domänenadministrators.\n" 2>&1| tee -a $LOGFILE | pgbox
 
 # test kerberos and andmin password
+clear
 kinit Administrator@$krbrealm
 
 if [[ $? != 0 ]]; then
