@@ -28,5 +28,3 @@
 	# Logging
 	log level = 3
 
-	# Freigabenkonfiguration einbinden
-	;include /etc/samba/smb.shares.conf

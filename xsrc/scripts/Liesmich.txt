@@ -1,0 +1,4 @@
+Bemerkungen zu den Scripts:
+
+1. joininvis: Der initiale Join wird während des Server-Setups erledigt. Das Script sollte so umgebaut werden, dass damit ein rejoin durchgeführt werden kann.
+2. invisconnect: Unklar, ob das Script benötigt wird, VPN Aufbau erfolgt während des Systemstarts

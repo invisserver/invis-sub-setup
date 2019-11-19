@@ -4,3 +4,4 @@
 4:d:nameserver
 5:d:openvpn
 6:d:joindomain
+7:d:fileserver
