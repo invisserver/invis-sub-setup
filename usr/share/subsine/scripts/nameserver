@@ -79,6 +79,10 @@ changevalues $path $file "$string"
 # Nameserver bind in Autostart und starten
 chkservice "named"
 
+# Service in Firewall aktivieren
+firewall-cmd --zone=public --add-service=dns --permanent 2>&1| tee -a $LOGFILE | pgbox
+systemctl restart firewalld.service 2>&1| tee -a $LOGFILE | pgbox
+
 # Forwarder auf bind umstellen
 sysconf_addword -r /etc/sysconfig/network/config NETCONFIG_DNS_FORWARDER resolver 2>&1| tee -a $LOGFILE | pgbox 
 sysconf_addword /etc/sysconfig/network/config NETCONFIG_DNS_FORWARDER bind 2>&1| tee -a $LOGFILE | pgbox 

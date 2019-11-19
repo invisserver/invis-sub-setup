@@ -63,7 +63,10 @@ chkservice nmb
 chkservice smb
 chkservice winbind
 
-#
+# Service in Firewall aktivieren
+firewall-cmd --zone=public --add-service=samba --permanent 2>&1| tee -a $LOGFILE | pgbox
+systemctl restart firewalld.service 2>&1| tee -a $LOGFILE | pgbox
+
 #cp $TEMPLATEDIR/fileserver/nfs/exports_nfs4 /etc/exports  2>&1| tee -a $LOGFILE
 #cp $TEMPLATEDIR/fileserver/nfs/nfs /etc/sysconfig  2>&1| tee -a $LOGFILE
 #cat $TEMPLATEDIR/fileserver/nfs/fstab_extention >> /etc/fstab
