@@ -57,8 +57,8 @@ krbrealm=${domain^^}
 invisserver=`dig SRV _ldap._tcp.$dnsdomain +short |cut -d " " -f4`
 invisip=`dig $invisserver +short`
 
-echo $invisserver
-echo $invisip
+#echo $invisserver
+#echo $invisip
 
 # Punkte zaehlen
 dotcount=`echo -n "$dnsdomain" | sed -e 's/[^.]//g' | wc -m`
@@ -71,18 +71,18 @@ else
 fi
 
 # Dateien sichern und neue aus Templatedir kopieren
-mv /etc/samba/smb.conf /etc/samba/smb.conf.setupsafe
+mv /etc/samba/smb.conf /etc/samba/smb.conf.setupsafe 2>&1| tee -a $LOGFILE | pgbox
 if [[ -f /etc/sssd/sssd.conf ]]; then
-    old /etc/sssd/sssd.conf
+    old /etc/sssd/sssd.conf 2>&1| tee -a $LOGFILE | pgbox
 fi
-old /etc/krb5.conf
-old /etc/nsswitch.conf
+old /etc/krb5.conf 2>&1| tee -a $LOGFILE | pgbox
+old /etc/nsswitch.conf 2>&1| tee -a $LOGFILE | pgbox
 
 # Neue Konfigurationsdateien kopieren und anpassen
-cp $TEMPLATEDIR/joindomain/krb5.conf /etc
-cp $TEMPLATEDIR/joindomain/nsswitch.conf /etc
-cp $TEMPLATEDIR/joindomain/sssd.conf /etc/sssd
-cp $TEMPLATEDIR/joindomain/smb.conf /etc/samba
+cp $TEMPLATEDIR/joindomain/krb5.conf /etc 2>&1| tee -a $LOGFILE | pgbox
+cp $TEMPLATEDIR/joindomain/nsswitch.conf /etc 2>&1| tee -a $LOGFILE | pgbox
+cp $TEMPLATEDIR/joindomain/sssd.conf /etc/sssd 2>&1| tee -a $LOGFILE | pgbox
+cp $TEMPLATEDIR/joindomain/smb.conf /etc/samba 2>&1| tee -a $LOGFILE | pgbox
 
 # Samba
 path="/etc/samba"
@@ -97,6 +97,9 @@ changevalues $path $modfile "$changestrings"
 # Kerberos
 path="/etc"
 modfile="krb5.conf"
+
+changestrings="zentrale.invis-net.loc%$invisserver"
+changevalues $path $modfile "$changestrings"
 
 changestrings="INVIS-NET.LOC%$krbrealm"
 changevalues $path $modfile "$changestrings"
@@ -114,17 +117,17 @@ chmod 0600 "$path/$modfile"
 # prepare domain join
 # Bugfix, das folgende Verzeichnis fehlt
 if [[ ! -d "/run/user/0/krb5cc" ]]; then
-    mkdir -p "/run/user/0/krb5cc"
+    mkdir -p "/run/user/0/krb5cc" 2>&1| tee -a $LOGFILE | pgbox
 fi
 
 # inform about next steps question
-echo -e "Sie benötigen jetzt das Passwort des Domänenadministrators.\n"
+echo -e "Sie benötigen jetzt das Passwort des Domänenadministrators.\n" 2>&1| tee -a $LOGFILE | pgbox
 
 # test kerberos and andmin password
 kinit Administrator@$krbrealm
 
 if [[ $? != 0 ]]; then
-    echo "Sie haben ein falsches Passwort eingegeben, das Script wird abgebrochen."
+    echo "Sie haben ein falsches Passwort eingegeben, das Script wird abgebrochen." 2>&1| tee -a $LOGFILE | pgbox
     exit 1
 fi
 
@@ -132,13 +135,13 @@ fi
 net join -k
 
 # remove old sss-cache
-delssscache
+delssscache 2>&1| tee -a $LOGFILE | pgbox
 
 # SSSD in Autostart integrieren.
-systemctl enable sssd.service
+systemctl enable sssd.service 2>&1| tee -a $LOGFILE | pgbox
 
 # PAM Konfigurieren -> SSSD Modul aktivieren
-pam-config --add --sss
+pam-config --add --sss 2>&1| tee -a $LOGFILE | pgbox
 
 cat $TEMPLATEDIR/joindomain/smb-server-extension >> /etc/samba/smb.conf
 path="/etc/samba"
