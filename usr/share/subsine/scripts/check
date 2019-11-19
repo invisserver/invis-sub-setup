@@ -91,6 +91,10 @@ if [[ $prepok == "0" ]]; then
     zypper -n install -n bind 2>&1| tee -a $LOGFILE | pgbox 25 110 
     zyppercheck ${PIPESTATUS[0]}
 
+    # Samba winbind und sssd-ad
+    zypper -n in -ny samba-winbind sssd-ad 2>&1| tee -a $LOGFILE | pgbox 25 110 
+    zyppercheck ${PIPESTATUS[0]}
+
     # Grub2-Konfiguration
     # Eigenes Grub2 Theme installieren
     tar -xf $TEMPLATEDIR/$modulename/grub/invis8.tar.gz -C /boot/grub2/themes/ 2>&1| tee -a $LOGFILE | pgbox 25 110 

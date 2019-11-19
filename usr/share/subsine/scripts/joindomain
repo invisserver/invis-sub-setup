@@ -140,5 +140,11 @@ systemctl enable sssd.service
 # PAM Konfigurieren -> SSSD Modul aktivieren
 pam-config --add --sss
 
+cat $TEMPLATEDIR/joindomain/smb-server-extension >> /etc/samba/smb.conf
+path="/etc/samba"
+modfile="smb.conf"
+
+changestrings="LOCALDOMAIN%$netbiosdomain"
+changevalues $path $modfile "$changestrings"
 
 sleep 10
