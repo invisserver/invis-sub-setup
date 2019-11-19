@@ -1,4 +1,4 @@
-Für die Installation eines invis Filial Servers 0.5 müssen folgende Voraussetzungen erfüllt sein:
+Für die Installation eines invis Filial Servers 0.9 müssen folgende Voraussetzungen erfüllt sein:
 
     - Als Basis muss openSUSE Leap 15.1, möglichst ohne grafische Oberfläche installiert sein.
     

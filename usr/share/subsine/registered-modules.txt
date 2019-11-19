@@ -3,3 +3,4 @@
 3:d:sysprep
 4:d:nameserver
 5:d:openvpn
+6:d:joindomain

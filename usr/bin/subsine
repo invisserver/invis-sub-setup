@@ -46,7 +46,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 # Global variables
-INVISVERSION="0.8"
+INVISVERSION="0.9"
 SINEWORKINGDIR="/var/lib/subsine"
 export INVISVERSION
 export SINEWORKINGDIR
