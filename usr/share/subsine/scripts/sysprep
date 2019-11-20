@@ -74,16 +74,6 @@ echo "umask 0002" >> /etc/skel/.profile
 ## Virenscanner einrichten
 # Quarantaeneverzeichnis anlegen
 mkdir /var/spool/infected
-av=`getconfdata "AV" "2"`
-avcron=`getconfdata "AVCRON" "2"`
-
-# Der ausgewaehlte Virenscanner wird in invis-sub.conf eingetragen
-string="AV:clamav%AV:$av"
-changevalues $INVISCONFDIR "invis-sub.conf" "$string"
-    
-# Eintragen, ob regelmaeßig auf Viren geprueft wird.
-string="avCheck:j%avCheck:$avcron"
-changevalues $INVISCONFDIR "invis-sub.conf" "$string"
 
 # add invis-Version to config-file
 string="invisversion%$INVISVERSION"
@@ -164,8 +154,6 @@ fi
 # Limits erhoehen fuer Samba und Zarafa
 cp $TEMPLATEDIR/$modulename/security/limits.conf /etc/security/ 2>&1| tee -a $LOGFILE | pgbox
 
-## prepare sysconfig variables
-ipaddr=`getconfdata "IP" "2"`
 
 # copy corrected file to /etc/sysconfig/network
 cp $TEMPLATEDIR/$modulename/sysconfig/config /etc/sysconfig/network 2>&1| tee -a $LOGFILE | pgbox
@@ -199,22 +187,13 @@ echo "System wird so konfiguriert, dass weder die Datei resolv.conf noch der NTP
 sysconf_addword -r /etc/sysconfig/network/config NETCONFIG_DNS_POLICY auto 2>&1| tee -a $LOGFILE | pgbox
 sysconf_addword -r /etc/sysconfig/network/config NETCONFIG_NTP_POLICY auto 2>&1| tee -a $LOGFILE | pgbox 
 
-# /etc/hosts anpassen
-file="hosts"
-path="/etc"
-string="127.0.0.2%$ipaddr"
-changevalues $path $file "$string"
-
 # DH-Parameterdatei für Postfix erzeugen
 # 2048 und 512 Bit DH-Parameter direkt mit openssl 
 openssl dhparam -out /etc/postfix/dh.pem -2 2048 2>&1| tee -a $LOGFILE | pgbox
 openssl dhparam -out /etc/postfix/dh_512.pem -2 512 2>&1| tee -a $LOGFILE | pgbox
-# Beide Dateien auch fuer Postfix bereit stellen
-#cp $path/$domain/dh*.pem /etc/postfix
     
 # Create certs and keys for all services
 # Do we need local certs an keys?
-
 
 # Zeitzoneneinstellung des Servers ermitteln
 # lamp is not included yet
