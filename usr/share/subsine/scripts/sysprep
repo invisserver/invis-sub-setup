@@ -122,8 +122,12 @@ changevalues $path $file "$string"
 #string="certowner%$admin"
 #changevalues $path $file "$string"
 
-domain=`getconfdata "Domain" "2"`
+domain=`getconfdata "Workgroup" "2"`
 string="invis-net.loc%$domain"
+changevalues $path $file "$string"
+
+masterip=`getconfdata "MasterIPint" "2"`
+string="192.168.220.10%$masterip"
 changevalues $path $file "$string"
 
 #basedn=`getconfdata "baseDN" "2"`
