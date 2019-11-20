@@ -57,8 +57,9 @@ krbrealm=${domain^^}
 invisserver=`dig SRV _ldap._tcp.$dnsdomain +short |cut -d " " -f4`
 invisip=`dig $invisserver +short`
 
+# hosts anpassen
 #echo $invisserver
-#echo $invisip
+echo -e "$invisip\t$invisserver" >> /etc/hosts
 
 # Punkte zaehlen
 dotcount=`echo -n "$dnsdomain" | sed -e 's/[^.]//g' | wc -m`
