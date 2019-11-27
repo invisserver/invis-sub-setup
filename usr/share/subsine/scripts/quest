@@ -110,18 +110,18 @@ Geben Sie bitte den Pfad zum Zertifikatscontainer (P12) und das zugehörige Pass
 done
 
 #---# AD Domain
-ok=0
-while (( $ok != "1" ));do
-    dialog --backtitle "$DIALOGTITLE - Modul: $modulename" --title "AD Domäne" --form "$DIALOGSHORTHELP\n\n
-Geben Sie bitte die ActiveDirectory Domäne Ihres zentralen invis-Serves ein." 14 74 3 \
-    "AD Domäne:" 2 2 "$addomain" 2 22 45 0\
-    2>$SINEWORKINGDIR/sine_temp2
-    exitcode=${?}
-    addomain=`cat $SINEWORKINGDIR/sine_temp2`
-    if [[ $addomain =~ ^[a-zA-Z0-9_\-]{1,254}+\.?[a-zA-Z0-9_\-]{1,254}+\.[a-zA-Z]{1,5}$ ]];then
-	ok=1
-    fi
-done
+#ok=0
+#while (( $ok != "1" ));do
+#    dialog --backtitle "$DIALOGTITLE - Modul: $modulename" --title "AD Domäne" --form "$DIALOGSHORTHELP\n\n
+#Geben Sie bitte die ActiveDirectory Domäne Ihres zentralen invis-Serves ein." 14 74 3 \
+#    "AD Domäne:" 2 2 "$addomain" 2 22 45 0\
+#    2>$SINEWORKINGDIR/sine_temp2
+#    exitcode=${?}
+#    addomain=`cat $SINEWORKINGDIR/sine_temp2`
+#    if [[ $addomain =~ ^[a-zA-Z0-9_\-]{1,254}+\.?[a-zA-Z0-9_\-]{1,254}+\.[a-zA-Z]{1,5}$ ]];then
+#	ok=1
+#    fi
+#done
 
 #---# Who is the admin
 ok=0
@@ -410,7 +410,7 @@ echo "Broadcast:$bcastaddr" >> $SINEWORKINGDIR/invis_confdata
 echo "ReverseDom:$revnet" >> $SINEWORKINGDIR/invis_confdata
 
 ##???
-echo "Workgroup:$addomain" >> $SINEWORKINGDIR/invis_confdata
+#echo "Workgroup:$addomain" >> $SINEWORKINGDIR/invis_confdata
 echo "Forwarders:$forwarders"  >> $SINEWORKINGDIR/invis_confdata
 
 echo "MonitoringSoftware:$whichmonitoring" >> $SINEWORKINGDIR/invis_confdata
