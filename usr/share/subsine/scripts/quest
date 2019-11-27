@@ -55,9 +55,9 @@ textbox "$INFODIR/setupquestions.txt" "Wir hätten da ein paar Fragen an Sie." "
 # possible, that we don't need this anymore
 vhn=`hostname -s`
 vdomname=`hostname -d`
-#vipaddr=`ip address show intern|tr -s " "|grep "inet "|cut -d "/" -f1 | cut -d " " -f3`
-#cidrmask=`ip address show intern|tr -s " "|grep "inet "|cut -d "/" -f2 |cut -d " " -f1`
-#vlongnmask=`cdr2mask $cidrmask`
+vipaddr=`ip address show intern|tr -s " "|grep "inet "|cut -d "/" -f1 | cut -d " " -f3`
+cidrmask=`ip address show intern|tr -s " "|grep "inet "|cut -d "/" -f2 |cut -d " " -f1`
+vlongnmask=`cdr2mask $cidrmask`
 country="DE"
 #---#
 
@@ -143,6 +143,75 @@ Geben Sie bitte Kontaktdaten des für den Server verantwortlichen Administrators
 	(( ok=$ok + 1 ))
     fi
 done
+
+#---# Netzwerk
+ok=1
+while (( $ok != "0" ));do
+    dialog --backtitle "$DIALOGTITLE - Modul: $modulename" --title "Fragen zur Netzwerkumgebung" --form "$DIALOGSHORTHELP\n\n
+Die Vorgabewerte wurden aus der Systemkonfiguration ermittelt und sollten somit richtig sein. \nPrüfen Sie vor allem,
+ob der angezeigte Domänenname aus Domain und Top-Level-Domain besteht; also zweiteilig ist. Domänennamen wie der bei
+openSUSE vorgegebene \"site\" bereiten im weiteren Verlauf der invis Server Installation Probleme.\nVerwenden Sie 
+keinesfalls eine real existierende Top-Level-Domain wie \".de\" oder \".com\". Statt dessen eigenet sich beispielsweise
+\".loc\" (für local).\n\n 
+Wenn Sie hier Änderungen vornehmen, müssen Sie diese nachträglich in Ihre Systemkonfiguration übernehmen.\n\n
+Achtung: Fehlerhafte Eingaben sind nach der vollständigen Installation nur sehr schwer zu korrigieren." 29 80 5 \
+    "Hostname:" 2 2 "$vhn" 2 13 20 0\
+    "Domain:" 2 35 "$vdomname" 2 43 27 0\
+    "IP (intern):" 4 2 "$vipaddr" 4 13 20 0\
+    "Netzwerkmaske:" 4 35 "$vlongnmask" 4 50 20 0\
+    2>$SINEWORKINGDIR/sine_temp
+    netvalues=(`cat $SINEWORKINGDIR/sine_temp`)
+
+    # Alle Daten ermitteln.
+    hn="${netvalues[0]}"
+    domain="${netvalues[1]}"
+    ipaddr="${netvalues[2]}"
+    longnmask="${netvalues[3]}"
+    shortnmask=`mask2cdr $longnmask`
+    netaddr=`ipcalc -bn ${netvalues[2]}/$longnmask | grep "^Network:"|tr -s " "| cut -d " " -f2|cut -d "/" -f1`
+    bcastaddr=`ipcalc -bn ${netvalues[2]}/$longnmask | grep "^Broadcast:"|tr -s " "| cut -d " " -f2`
+    #dp1=`echo "$domain" | cut -d "." -f 1`
+    #dp2=`echo "$domain" | cut -d "." -f 2`
+    #ldapbase="DC=$dp1,DC=$dp2"
+    # Testweise auf volle Domain geaendert -- noch nicht
+    smbdomain=`echo $dp1 | tr [a-z] [A-Z]`
+        
+    # Umgekehrte Netzwerkadresse bilden
+    i=0
+    while (( $i < 4 )); do
+        (( feld=$i + 1 ))
+        if [[ `echo "$longnmask" | cut -d "." -f $feld` != "0" ]];then
+	    revd[$i]=`echo "$netaddr" | cut -d "." -f $feld`
+	fi
+	i=$feld
+	done
+	
+	imax=${#revd[*]}
+	i=0
+	while (( $i < $imax )); do
+	    if (( $i == 0));then
+		revnet="${revd[$i]}"
+	    else
+		revnet="${revd[$i]}.$revnet"
+	    fi
+	    (( i=$i + 1 ))
+	done
+	
+	yesno "Prüfen Sie bitte genau ob die folgenden Angaben korrekt sind.\n
+	\nIP-Adresse(intern):   $ipaddr
+	\nNetzwerkbasis:        $netaddr
+	\nNetzwerkmaske (lang): $longnmask / (kurz): $shortnmask
+	\nBroadcast-Adresse:    $bcastaddr
+	\nFQDN:                 $hn.$domain
+	\nSamba-Domäne:         $smbdomain
+	\n\nSind alle Angaben korrekt?" "Netzwerkdaten"
+	
+	ok=${?}
+    done
+
+# zunächst entfernt
+#	\nLDAP Base:            $ldapbase
+
 
 # DNS Forwarder
 ok=3
@@ -327,6 +396,20 @@ echo "Admin:$admin" >> $SINEWORKINGDIR/invis_confdata
 
 echo "P12Path:$p12path" >> $SINEWORKINGDIR/invis_confdata
 
+## Muss vermutlich noch angepasst werden => infos doppelt.
+echo "Hostname:$hn" >> $SINEWORKINGDIR/invis_confdata
+echo "Domain:$domain" >> $SINEWORKINGDIR/invis_confdata
+echo "FQDN:$hn.$domain" >> $SINEWORKINGDIR/invis_confdata
+echo "baseDN:$ldapbase" >> $SINEWORKINGDIR/invis_confdata
+echo "Workgroup:$smbdomain" >> $SINEWORKINGDIR/invis_confdata
+echo "IP:$ipaddr" >> $SINEWORKINGDIR/invis_confdata
+echo "Networkbase:$netaddr" >> $SINEWORKINGDIR/invis_confdata
+echo "NMask-short:$shortnmask" >> $SINEWORKINGDIR/invis_confdata
+echo "NMask-long:$longnmask" >> $SINEWORKINGDIR/invis_confdata
+echo "Broadcast:$bcastaddr" >> $SINEWORKINGDIR/invis_confdata
+echo "ReverseDom:$revnet" >> $SINEWORKINGDIR/invis_confdata
+
+##???
 echo "Workgroup:$addomain" >> $SINEWORKINGDIR/invis_confdata
 echo "Forwarders:$forwarders"  >> $SINEWORKINGDIR/invis_confdata
 
