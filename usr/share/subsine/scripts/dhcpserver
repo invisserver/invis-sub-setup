@@ -1,5 +1,5 @@
 #!/bin/bash
-### MODUL-NR. 008 ###
+### MODUL-NR. 007 ### <- Hier Nummer einfügen!
 # (c) August 2008 Stefan Schäfer / FSP Computer & Netzwerke
 # (c) 2009-2019 Stefan Schäfer / invis-server.org / stefan@invis-server.org
 # (c) 2013,2014 Dimitri Asarowski / invis-server.org / dimitri@invis-server.org
@@ -8,9 +8,9 @@
 # License: GPLv3
 # Questions: info@invis-server.org
 
-# Das Modul fileserver richtet die Netzwerkfreigaben des invis-sub-Servers ein
+# Hier Kurzbeschreibung des Moduls einfügen
 
-# The module fileserver sets up the invis-server network shares
+# Insert short description of this module here
 
 # Dieses Programm ist freie Software. Sie können es unter den Bedingungen der 
 # GNU General Public License, wie von der Free Software Foundation veröffentlicht,
@@ -44,37 +44,6 @@ source $SINEINCLUDEDIR/functions
 modulename=`basename $0`
 
 clear
-windowtitle="Fileserver"
-pgsubtitle="Netzwerkfreigaben einrichten"
+windowtitle="DHCP-Server"
+pgsubtitle="Einfaches DHCP-Server Setup"
 
-# Anpassen der Datei smb.conf
-path="/etc/samba"
-file="smb.conf"
-
-# Freigaben Erweiterung in Samba-Konfiguration einbinden
-echo >> $path/$file
-echo "## invis-server.org Freigabenkonfiguration einbinden" >> $path/$file
-echo "include = /etc/samba/smb.shares.conf" >> $path/$file
-
-# Freigaben werden angelegt
-cp $TEMPLATEDIR/fileserver/smb.shares.conf /etc/samba/smb.shares.conf 2>&1| tee -a $LOGFILE
-
-chkservice nmb
-chkservice smb
-chkservice winbind
-
-# Service in Firewall aktivieren
-firewall-cmd --zone=public --add-service=samba --permanent 2>&1| tee -a $LOGFILE | pgbox
-systemctl restart firewalld.service 2>&1| tee -a $LOGFILE | pgbox
-
-#cp $TEMPLATEDIR/fileserver/nfs/exports_nfs4 /etc/exports  2>&1| tee -a $LOGFILE
-#cp $TEMPLATEDIR/fileserver/nfs/nfs /etc/sysconfig  2>&1| tee -a $LOGFILE
-#cat $TEMPLATEDIR/fileserver/nfs/fstab_extention >> /etc/fstab
-#mount -a
-#path="/etc"
-#file="idmapd.conf"
-#string="localdomain%$domain"
-#changevalues $path $file "$string"
-#file=exports
-#string="192.168.220.0/24%$netbase/$nmaskshort"
-#changevalues $path $file "$string"
