@@ -47,3 +47,11 @@ clear
 windowtitle="DHCP-Server"
 pgsubtitle="Einfaches DHCP-Server Setup"
 
+# named.conf template kopieren
+old /etc/dhcpd.conf 2>&1| tee -a $LOGFILE | pgbox
+cp $TEMPLATEDIR/$modulename/dhcpd.conf /etc 2>&1| tee -a $LOGFILE | pgbox
+
+# modify dhcpd.conf
+
+# set internal network interface as dhcpd interface
+sysconf_addword /etc/sysconfig/dhcpd DHCPD_INTERFACE intern 2>&1| tee -a $LOGFILE | pgbox

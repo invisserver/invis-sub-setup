@@ -49,9 +49,9 @@ pgsubtitle="Caching only Nameserver einrichten"
 
 # named.conf template kopieren
 old /etc/named.conf 2>&1| tee -a $LOGFILE | pgbox
-cp $TEMPLATEDIR/nameserver/named.conf /etc 2>&1| tee -a $LOGFILE | pgbox
-cp $TEMPLATEDIR/nameserver/direct.forwarders /etc/named.d 2>&1| tee -a $LOGFILE | pgbox
-cp $TEMPLATEDIR/nameserver/vpn.forwarders /etc/named.d 2>&1| tee -a $LOGFILE | pgbox
+cp $TEMPLATEDIR/$modulename/named.conf /etc 2>&1| tee -a $LOGFILE | pgbox
+cp $TEMPLATEDIR/$modulename/direct.forwarders /etc/named.d 2>&1| tee -a $LOGFILE | pgbox
+cp $TEMPLATEDIR/$modulename/vpn.forwarders /etc/named.d 2>&1| tee -a $LOGFILE | pgbox
 
 # Link anlegen
 ln -fs /etc/named.d/direct.forwarders /etc/named.d/named.forwarder
