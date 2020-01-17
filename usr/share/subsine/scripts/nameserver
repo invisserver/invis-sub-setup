@@ -64,10 +64,9 @@ domain=`getconfdata "Workgroup" "2"`
 
 path="/etc/named.d/"
 file="vpn.forwarders"
-string="fwstring%$fwstring"
-changevalues $path $file "$string"
+#string="fwstring%$fwstring"
+#changevalues $path $file "$string"
 
-file="vpn.forwarders"
 string="ip-dc%$ipmaster"
 changevalues $path $file "$string"
 
