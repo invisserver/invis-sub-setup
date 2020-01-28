@@ -170,12 +170,10 @@ Achtung: Fehlerhafte Eingaben sind nach der vollständigen Installation nur sehr
     shortnmask=`mask2cdr $longnmask`
     netaddr=`ipcalc -bn ${netvalues[2]}/$longnmask | grep "^Network:"|tr -s " "| cut -d " " -f2|cut -d "/" -f1`
     bcastaddr=`ipcalc -bn ${netvalues[2]}/$longnmask | grep "^Broadcast:"|tr -s " "| cut -d " " -f2`
-    #dp1=`echo "$domain" | cut -d "." -f 1`
+    dp1=`echo "$domain" | cut -d "." -f 1`
     #dp2=`echo "$domain" | cut -d "." -f 2`
-    #ldapbase="DC=$dp1,DC=$dp2"
-    # Testweise auf volle Domain geaendert -- noch nicht
-    smbdomain=`echo $dp1 | tr [a-z] [A-Z]`
-        
+    smbdomain=`echo ${dp1^^}`
+    
     # Umgekehrte Netzwerkadresse bilden
     i=0
     while (( $i < 4 )); do
