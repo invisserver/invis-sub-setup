@@ -387,7 +387,7 @@ Aus Ihrem lokalen Netz heraus kann für SSH weiter Port 22 verwendet werden." "S
 
 # Alle Daten in Kontrolldatei Schreiben
 echo "MasterFQDNext:$masterfqdnext" > $SINEWORKINGDIR/invis_confdata
-echo "MasterIPint:$masteripint" > $SINEWORKINGDIR/invis_confdata
+echo "MasterIPint:$masteripint" >> $SINEWORKINGDIR/invis_confdata
 
 echo "Admail:$admail" >> $SINEWORKINGDIR/invis_confdata
 echo "Admin:$admin" >> $SINEWORKINGDIR/invis_confdata
