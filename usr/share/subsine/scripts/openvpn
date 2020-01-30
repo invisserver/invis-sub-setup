@@ -59,7 +59,7 @@ cp $TEMPLATEDIR/$modulename/invis-sub-server.conf /etc/openvpn
 path="/etc/openvpn"
 file="invis-sub-server.conf"
 
-masterfqdn=`getconfdata "MasterFQDN" "2"`
+masterfqdn=`getconfdata "MasterFQDNext" "2"`
 string="openvpn_server%$masterfqdn"
 changevalues $path $file "$string"
 
