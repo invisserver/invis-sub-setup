@@ -58,7 +58,7 @@ ln -fs /etc/named.d/direct.forwarders /etc/named.d/named.forwarder
 
 # forwarders in beiden Dateien anpassen
 # Konfigurationsdaten ermitteln
-ipmaster=`getconfdata "MasterIP" "2"`
+ipmaster=`getconfdata "MasterIPint" "2"`
 fwstring=`getconfdata "Forwarders" "2"`
 domain=`getconfdata "Workgroup" "2"`
 
@@ -86,7 +86,7 @@ sysconf_addword -r /etc/sysconfig/network/config NETCONFIG_DNS_FORWARDER resolve
 sysconf_addword /etc/sysconfig/network/config NETCONFIG_DNS_FORWARDER bind 2>&1| tee -a $LOGFILE | pgbox 
 
 # Anpassen der Datei /etc/resolv.conf
-cp $TEMPLATEDIR/nameserver/resolv.conf /etc 2>&1| tee -a $LOGFILE | pgbox
+cp $TEMPLATEDIR/dns/resolv.conf /etc 2>&1| tee -a $LOGFILE | pgbox
 path="/etc/"
 file="resolv.conf"
 string="invis-net.loc%$domain"
