@@ -271,3 +271,10 @@ changevalues $INVISCONFDIR $file "$string"
 # cron & at-Daemon in Runlevel integrieren und starten
 chkservice "cron"
 chkservice "atd"
+
+# Hosts Datei erweitern
+ipext=`ip address show extern|grep "inet\s"|tr -s " "|cut -d "/" -f1|cut -d " " -f3`
+fqdn=`cat /etc/hostname`
+hn=`echo $fqdn|cut -d "." -f1`
+
+echo -e "$ipext\t$fqdn\t$hn\n" >> /etc/hosts
