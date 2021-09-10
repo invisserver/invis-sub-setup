@@ -1,9 +1,9 @@
-Für die Installation eines invis Filial Servers 0.13 müssen folgende Voraussetzungen erfüllt sein:
+Für die Installation eines invis Filial Servers 0.14 müssen folgende Voraussetzungen erfüllt sein:
 
-    - Als Basis muss openSUSE Leap 15.1, möglichst ohne grafische Oberfläche installiert sein.
+    - Als Basis muss openSUSE Leap ab 15.1, möglichst ohne grafische Oberfläche installiert sein.
     
     - Sie benötigen einen gültigen VPN-Client-Zertifikat, ausgestellt auf dem invis-Server Ihrer
-      Unternehmenszentrale.
+      Unternehmenszentrale. Das Zertifikat muss in Form einer PKCS12-Datei vorliegen.
 
     - Sib benötigen den im Internet gültigen Namen des zentralen invis-Servers, wie auch dessen
       lokale interne IP-Adresse.
