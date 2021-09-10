@@ -56,6 +56,9 @@ krbrealm=${domain^^}
 
 # get invis-Server hostname
 invisserver=`dig SRV _ldap._tcp.$dnsdomain +short |cut -d " " -f4`
+if [[ -z $invisserver ]]; then
+    exit 5
+fi
 invisip=`dig $invisserver +short`
 
 # hosts anpassen
