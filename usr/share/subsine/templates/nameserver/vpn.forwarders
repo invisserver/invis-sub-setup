@@ -1,1 +1,4 @@
+# Workaround, da DNSSEC Validation zwischen Filialserver und invis-Server
+# noch nicht moeglich ist.
+dnssec-validation no;
 forwarders { ip-dc; };

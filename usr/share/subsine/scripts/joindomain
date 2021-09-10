@@ -48,7 +48,8 @@ windowtitle="Join Domain"
 pgsubtitle="Filialserver der Domäne der Zentrale hinzufügen"
 
 # Domaenennamen aus Konfiguration lesen und in unterschiedliche Schreibweisen uebersetzen
-domain=`getconfdata "Workgroup" "2"`
+workgroup=`getconfdata "Workgroup" "2"`
+domain=`getconfdata "Domain" "2"`
 
 dnsdomain=${domain,,}
 krbrealm=${domain^^}
@@ -62,14 +63,14 @@ invisip=`dig $invisserver +short`
 echo -e "$invisip\t$invisserver" >> /etc/hosts
 
 # Punkte zaehlen
-dotcount=`echo -n "$dnsdomain" | sed -e 's/[^.]//g' | wc -m`
+#dotcount=`echo -n "$dnsdomain" | sed -e 's/[^.]//g' | wc -m`
 
 # create NetBIOS-Domain and kerberos realm
-if (( $dotcount == 1 )); then
-    netbiosdomain=`echo $krbrealm | cut -d "." -f1`
-else
-    netbiosdomain=`echo $krbrealm | cut -d "." -f1-$dotcount`
-fi
+#if (( $dotcount == 1 )); then
+#    netbiosdomain=`echo $krbrealm | cut -d "." -f1`
+#else
+#    netbiosdomain=`echo $krbrealm | cut -d "." -f1-$dotcount`
+#fi
 
 # Dateien sichern und neue aus Templatedir kopieren
 mv /etc/samba/smb.conf /etc/samba/smb.conf.setupsafe 2>&1| tee -a $LOGFILE | pgbox
@@ -92,8 +93,13 @@ modfile="smb.conf"
 changestrings="INVIS-NET.LOC%$krbrealm"
 changevalues $path $modfile "$changestrings"
 
-changestrings="INVIS-NET%$netbiosdomain"
+changestrings="INVIS-NET%$workgroup"
 changevalues $path $modfile "$changestrings"
+
+echo $invisserver
+echo $krbrealm
+
+#sleep 5
 
 # Kerberos
 path="/etc"
@@ -128,9 +134,11 @@ echo -e "Sie benötigen jetzt das Passwort des Domänenadministrators.\n" 2>&1| 
 clear
 kinit Administrator@$krbrealm
 
+#sleep 5
+
 if [[ $? != 0 ]]; then
     echo "Sie haben ein falsches Passwort eingegeben, das Script wird abgebrochen." 2>&1| tee -a $LOGFILE | pgbox
-    exit 1
+    exit 5
 fi
 
 # join domain
@@ -149,7 +157,7 @@ cat $TEMPLATEDIR/joindomain/smb-server-extension >> /etc/samba/smb.conf
 path="/etc/samba"
 modfile="smb.conf"
 
-changestrings="LOCALDOMAIN%$netbiosdomain"
+changestrings="LOCALDOMAIN%$workgroup"
 changevalues $path $modfile "$changestrings"
 
 sleep 10

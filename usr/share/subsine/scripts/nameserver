@@ -85,6 +85,9 @@ systemctl restart firewalld.service 2>&1| tee -a $LOGFILE | pgbox
 sysconf_addword -r /etc/sysconfig/network/config NETCONFIG_DNS_FORWARDER resolver 2>&1| tee -a $LOGFILE | pgbox 
 sysconf_addword /etc/sysconfig/network/config NETCONFIG_DNS_FORWARDER bind 2>&1| tee -a $LOGFILE | pgbox 
 
+# Evtl erforderlich
+#netconfig update -f
+
 # Anpassen der Datei /etc/resolv.conf
 cp $TEMPLATEDIR/dns/resolv.conf /etc 2>&1| tee -a $LOGFILE | pgbox
 path="/etc/"
