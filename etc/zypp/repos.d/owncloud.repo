@@ -1,0 +1,7 @@
+[owncloud]
+name=owncloud
+type=rpm-md
+baseurl=https://download.owncloud.com/desktop/ownCloud/stable/latest/linux/openSUSE_Leap_15.3
+gpgcheck=1
+gpgkey=https://download.owncloud.com/desktop/ownCloud/stable/latest/linux/openSUSE_Leap_15.3/repodata/repomd.xml.key
+enabled=1

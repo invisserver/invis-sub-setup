@@ -1,7 +1,0 @@
-[isv_ownCloud_desktop]
-name=qt depenendencies for client 2.6.x (openSUSE_Leap_15.2)
-type=rpm-md
-baseurl=http://download.opensuse.org/repositories/isv:/ownCloud:/desktop/openSUSE_Leap_15.2/
-gpgcheck=1
-gpgkey=http://download.opensuse.org/repositories/isv:/ownCloud:/desktop/openSUSE_Leap_15.2/repodata/repomd.xml.key
-enabled=1
