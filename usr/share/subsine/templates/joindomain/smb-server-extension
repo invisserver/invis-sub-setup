@@ -1,3 +1,5 @@
+    # IP des DCs wegen VPN-Verbindung definitiv angeben
+    password server = PDCIP, *
 
     # NTLMv1 Authentifikation verbieten
     ntlm auth = no
