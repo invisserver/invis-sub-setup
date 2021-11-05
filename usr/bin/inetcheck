@@ -33,7 +33,7 @@
 # Programm erhalten haben. Falls nicht, siehe <http://www.gnu.org/licenses/>. 
 
 #Konfigurationsdaten
-conffile="/etc/invis/invis.conf"
+conffile="/etc/invis/invis-sub.conf"
 #passfile="/etc/invis/invis-pws.conf"
 
 # Funktionen
@@ -66,17 +66,17 @@ fi
 # des zu aktualisierenden DNS-Servers benoetigt).
 ddnsup=`getconfdata $conffile "ddnsOn" "2"`
 nameserver=`getconfdata $conffile "nameServer" "2"`
-fqdn=`getconfdata $conffile "fqdn" "2"`
+fqdn=`getconfdata $conffile "fqdn:" "2"`
 version=`getconfdata $conffile "invisVersion" "2"`
 version=`echo $version|tr -d "."`
+#version=`cat /etc/os-release |grep "^VERSION="|tr -d \"|tr -d .|cut -d "=" -f2`
 
-if (($version < 142)); then
+if (( $version < 1014 )); then
     keynumber=`getconfdata $conffile "keyNumber" "2"`
 else
     secret=`getconfdata $conffile "keySecret" "2"`
     algorithm=`getconfdata $conffile "keyAlgorithm" "2"`
 fi
-
 
 # Wenn noch nicht vorhanden die Datei lastip anlegen.
 if [[ ! -f $resultdir/lastip ]]; then
@@ -140,7 +140,6 @@ fi
 
 echo '<hr><div align="right"><font size="-2">(c) 2008 stefan@invis-server.org - www.invis-server.org</font></div></body></html>' >> /srv/www/htdocs/inetcheck.html
 
-
 # DNS-SEC Auto-Updater - Sie benoetigen hierzu einen DNS-Server der Updates von Ihnen akzeptiert.
 if [[ $ddnsup == "j" ]]; then
         # Sicherheitshalber erst mal den NS pingen
@@ -148,7 +147,7 @@ if [[ $ddnsup == "j" ]]; then
     # Aktualisierung nur vornehmen, wenn eine Abfrage beim zuständigen Nameserver eine andere IP ergibt als die Abfrage der DSL-Schnittstelle.
     if [[ $ownip != `dig @$nameserver +short $fqdn` ]]; then
 	# jetzt updaten
-	if (($version < 142)); then
+	if (($version < 1014)); then
 	    (
 		echo "server $nameserver"
 		echo "update delete $fqdn A"
