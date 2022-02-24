@@ -6,6 +6,9 @@ MAILTO=/dev/null
 # DNS Cache leeren nach jedem Reboot
 @reboot root sleep 10 && /usr/sbin/rndc flush
 
+# Firewall nach Reboot neu starten
+@reboot root sleep 30 && systemctl restart firewalld.service
+
 # regelmaessiges Pruefen der Internetverbindung und Wiederaufbau bei Bedarf
 # alle 10 Minuten
 */10 * * * * root /usr/local/bin/inetcheck
