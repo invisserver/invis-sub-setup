@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<zone target="DROP">
+  <short>External</short>
+  <description>For use on external networks. You do not trust the other computers on networks to not harm your computer. Only selected incoming connections are accepted.</description>
+  <interface name="extern"/>
+  <!-- Testumgebung: ssh über Standard-Port 22 -->
+  <!-- <service name="ssh"/> -->
+  <!-- Produktiv: ssh über Zufallsport xxxxx -->
+  <service name="invis-ssh"/>
+
+  <!-- openvpn (1195/UDP) -->
+  <service name="openvpn"/>
+
+  <!-- Blocken aller icmp-Protokolle -->
+  <icmp-block-inversion/>
+
+  <!-- NAT für das Interne Netz und VPN -->
+  <masquerade/>
+</zone>

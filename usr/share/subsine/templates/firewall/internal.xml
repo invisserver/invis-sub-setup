@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<zone>
+  <short>Internal</short>
+  <description>For use on internal networks. You mostly trust the other computers on the networks to not harm your computer. Only selected incoming connections are accepted.</description>
+  <interface name="intern"/>
+  <interface name="vpn"/>
+  <interface name="wlan0"/>
+  <forward/>
+  <!-- Intern: ssh über Standard-Port 22 -->
+  <service name="ssh"/>
+  <!-- Zusätzlich: ssh über Zufallsport xxxxx -->
+  <service name="invis-ssh"/>
+  <!-- <forward-port port="22" protocol="tcp" to-port="sshport"/> -->
+
+  <!-- CUPS -->
+  <service name="ipp"/>
+
+  <!-- Alles was mit dem AD und Infrastruktur zu tun hat -->
+  <service name="dhcp"/>
+  <service name="dns"/>
+  <service name="ntp"/>
+  <service name="samba"/>
+
+  <!-- Sonstige Infrastruktur -->
+  <service name="nfs"/>
+  <service name="syslog"/>
+  <service name="mdns"/>
+  <!-- MDNS zusätzlich auf TCP -->
+  <port port="5353" protocol="tcp"/>
+  <service name="ntop"/>
+</zone>
