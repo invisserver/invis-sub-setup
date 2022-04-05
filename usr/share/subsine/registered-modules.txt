@@ -6,3 +6,4 @@
 6:d:joindomain
 7:d:dhcpserver
 8:d:fileserver
+9:d:firewall

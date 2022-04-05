@@ -1,0 +1,104 @@
+#!/bin/bash
+### MODUL-NR. 013 ###
+# (c) August 2008 Stefan Schäfer / FSP Computer & Netzwerke
+# (c) 2009-2017 Stefan Schäfer / invis-server.org / stefan@invis-server.org
+# (c) 2013,2014 Dimitri Asarowski / invis-server.org / dimitri@invis-server.org
+# (c) 2013-2017 Ingo Göppert / invis-server.org / ingo@invis-server.org
+
+# License: GPLv3
+# Questions: info@invis-server.org
+
+# Firewall Einrichtung basierend auf SuSEfirewall2
+
+# SuSEfirewall2 based firewall setup
+
+# Dieses Programm ist freie Software. Sie können es unter den Bedingungen der 
+# GNU General Public License, wie von der Free Software Foundation veröffentlicht,
+# weitergeben und/oder modifizieren, entweder gemäß Version 3 der Lizenz oder
+# (nach Ihrer Option) jeder späteren Version.
+
+# Die Veröffentlichung dieses Programms erfolgt in der Hoffnung, daß es Ihnen
+# von Nutzen sein wird, aber OHNE IRGENDEINE GARANTIE, sogar ohne die implizite 
+# Garantie der MARKTREIFE oder der VERWENDBARKEIT FÜR EINEN BESTIMMTEN ZWECK. 
+# Details finden Sie in der GNU General Public License.
+
+# Sie sollten ein Exemplar der GNU General Public License zusammen mit diesem 
+# Programm erhalten haben. Falls nicht, siehe <http://www.gnu.org/licenses/>. 
+
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+# include functions
+source $SINEINCLUDEDIR/functions
+
+modulename=`basename $0`
+
+clear
+windowtitle="firewalld"
+pgsubtitle="Firewall Setup for invis-server"
+
+# Kopieren und anpassen der Firewall Konfiguration
+# Vorbereitete Konfigurationen kopieren
+echo "Kopiere Konfiguration..." | pgbox
+cp $TEMPLATEDIR/$modulename/external.xml /etc/firewalld/zones/ 2>&1| tee -a $LOGFILE | pgbox
+cp $TEMPLATEDIR/$modulename/internal.xml /etc/firewalld/zones/ 2>&1| tee -a $LOGFILE | pgbox
+
+# geaenderten Portal-HTTPS-Port einfuegen
+#httpsport=`getconfdata "HTTPSPORT" "2"`
+#if [[ -n $httpsport ]]; then
+#  file="invis-portal.xml"
+#  path="/etc/firewalld/services"
+#  string="443%$httpsport"
+#  changevalues $path $file "$string"
+#fi
+
+# geaenderten SSH-Port einfuegen
+sshport=`getconfdata "SSHPORT" "2"`
+file="invis-ssh.xml"
+path="/etc/firewalld/services"
+string="22%$sshport"
+changevalues $path $file "$string"
+
+# geaenderten SSH-Port einfuegen
+file="internal.xml"
+path="/etc/firewalld/zones"
+string="sshport%$sshport"
+changevalues $path $file "$string"
+
+# SSH Port ändern
+cp $TEMPLATEDIR/$modulename/sshd_config /etc/ssh/
+path="/etc/ssh"
+file="sshd_config"
+changevalues $path $file "$string"
+
+# SSHd neu starten
+chkservice "sshd"
+
+# Firewall starten und in Runlevel eintragen
+sfw2=`rpm -qa SuSEfirewall2`
+if [[ -n $sfw2 ]]; then
+    chkservice "SuSEfirewall2_init" d
+    chkservice "SuSEfirewall2" d
+fi
+chkservice "firewalld"
+
+# Default zone setzen per cmd
+echo "Setze default zone..." | pgbox
+firewall-cmd --set-default-zone=external 2>&1| tee -a $LOGFILE | pgbox
+
+# Logdenied aktivieren per cmd
+echo "Aktiviere logging verworfener Pakete..." | pgbox
+firewall-cmd --set-log-denied=all 2>&1| tee -a $LOGFILE | pgbox
+
+# Neustarten damit Änderungen aktiv sind
+chkservice "firewalld"
