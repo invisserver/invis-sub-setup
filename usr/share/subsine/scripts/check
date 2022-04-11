@@ -91,6 +91,11 @@ if [[ $prepok == "0" ]]; then
     zypper -n install -n bind 2>&1| tee -a $LOGFILE | pgbox 25 110 
     zyppercheck ${PIPESTATUS[0]}
 
+    # bind DNS Server
+    pgsubtitle="DHCP-Server wird installiert" 
+    zypper -n install -n dhcp-server 2>&1| tee -a $LOGFILE | pgbox 25 110 
+    zyppercheck ${PIPESTATUS[0]}
+
     # Samba winbind und sssd-ad
     zypper -n in -ny samba-winbind sssd-ad 2>&1| tee -a $LOGFILE | pgbox 25 110 
     zyppercheck ${PIPESTATUS[0]}

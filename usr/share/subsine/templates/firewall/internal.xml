@@ -27,5 +27,4 @@
   <service name="mdns"/>
   <!-- MDNS zusätzlich auf TCP -->
   <port port="5353" protocol="tcp"/>
-  <service name="ntop"/>
 </zone>
