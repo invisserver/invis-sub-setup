@@ -78,7 +78,7 @@ if [[ $prepok == "0" ]]; then
 
     # ownCloud client
     pgsubtitle="ownCloud Client wird installiert" 
-    zypper -n install -n --no-recommends --from isv_ownCloud_desktop owncloud-client 2>&1| tee -a $LOGFILE | pgbox 
+    zypper -n install -n --no-recommends --from owncloud owncloud-client 2>&1| tee -a $LOGFILE | pgbox 
     zyppercheck ${PIPESTATUS[0]}
 
     # NFS-Server
