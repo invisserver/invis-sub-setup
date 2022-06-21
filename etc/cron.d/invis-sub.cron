@@ -11,7 +11,7 @@ MAILTO=/dev/null
 
 # regelmaessiges Pruefen der Internetverbindung und Wiederaufbau bei Bedarf
 # alle 10 Minuten
-*/10 * * * * root /usr/local/bin/inetcheck
+*/10 * * * * root /usr/bin/inetcheck
 
 # USV abfragen
 # alle 3 Minuten
