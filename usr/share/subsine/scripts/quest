@@ -168,8 +168,8 @@ Achtung: Fehlerhafte Eingaben sind nach der vollständigen Installation nur sehr
     ipaddr="${netvalues[2]}"
     longnmask="${netvalues[3]}"
     shortnmask=`mask2cdr $longnmask`
-    netaddr=`ipcalc -bn ${netvalues[2]}/$longnmask | grep "^NETWORK:"|cut -d "=" -f2`
-    bcastaddr=`ipcalc -bn ${netvalues[2]}/$longnmask | grep "^BROADCAST:"|cut -d "=" -f2`
+    netaddr=`ipcalc -bn ${netvalues[2]}/$longnmask | grep "^NETWORK"|cut -d "=" -f2`
+    bcastaddr=`ipcalc -bn ${netvalues[2]}/$longnmask | grep "^BROADCAST"|cut -d "=" -f2`
     dp1=`echo "$domain" | cut -d "." -f 1`
     #dp2=`echo "$domain" | cut -d "." -f 2`
     smbdomain=`echo ${dp1^^}`
