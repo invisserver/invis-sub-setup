@@ -193,8 +193,8 @@ sysconf_addword -r /etc/sysconfig/network/config NETCONFIG_NTP_POLICY auto 2>&1|
 
 # DH-Parameterdatei für Postfix erzeugen
 # 2048 und 512 Bit DH-Parameter direkt mit openssl 
-openssl dhparam -out /etc/postfix/dh.pem -2 2048 2>&1| tee -a $LOGFILE | pgbox
-openssl dhparam -out /etc/postfix/dh_512.pem -2 512 2>&1| tee -a $LOGFILE | pgbox
+openssl-3 dhparam -out /etc/postfix/dh.pem -2 2048 2>&1| tee -a $LOGFILE | pgbox
+openssl-3 dhparam -out /etc/postfix/dh_512.pem -2 512 2>&1| tee -a $LOGFILE | pgbox
     
 # Create certs and keys for all services
 # Do we need local certs an keys?

@@ -3,6 +3,7 @@ ipcalc
 dos2unix
 psmisc
 iw
+mc
 wpa_supplicant
 cups-pdf
 speedtest-cli
