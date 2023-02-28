@@ -55,3 +55,46 @@ cp $TEMPLATEDIR/$modulename/dhcpd.conf /etc 2>&1| tee -a $LOGFILE | pgbox
 
 # set internal network interface as dhcpd interface
 sysconf_addword /etc/sysconfig/dhcpd DHCPD_INTERFACE intern 2>&1| tee -a $LOGFILE | pgbox
+
+
+# Daten abfragen
+domain=`getconfdata "Domain" "2"`
+ipaddr=`getconfdata "IP" "2"`
+netbase=`getconfdata "NetworkBase" "2"`
+broadcast=`getconfdata "Broadcast" "2"`
+## IP-Adresse zerlegen
+netpart1=`echo "$ipaddr" | cut -d "." -f 1`
+netpart2=`echo "$ipaddr" | cut -d "." -f 2`
+netpart3=`echo "$ipaddr" | cut -d "." -f 3`
+ipnetmask=`getconfdata "NMask-short" "2"`
+
+# Konfigurationsdatei anpassen
+path="/etc/"
+file="dhcpd.conf"
+
+# 24 oder 16 Bit Netzwerkmaske?
+if [[ $ipnetmask == "24" ]]; then
+    netpart="$netpart1.$netpart2.$netpart3"
+    strings="192.168.220%$netpart"
+    changevalues $path $file "$strings"
+elif [[ $ipnetmask == "16" ]]; then
+    netpart="$netpart1.$netpart2"
+    # DHCP Range aendern
+    strings="192.168.220.100 192.168.220.199%$netpart.200.1 $netpart.200.254"
+    changevalues $path $file "$strings"
+    # hier wird die Null automatisch eingefuegt, da von dieser Anpassung lediglich
+    # Server-Adressen betroffen sind, die immer zwischen. 172.x.0.1 und 172.x.0.10 liegen
+    strings="192.168.220%$netpart.0"
+    changevalues $path $file "$strings"
+    # Netzwerkmaske und Broadcast aendern
+    strings="255.255.255.0%255.255.0.0"
+    changevalues $path $file "$strings"
+    strings="192.168.220.255%$netpart.255.255"
+    changevalues $path $file "$strings"
+fi
+string="invis-net.loc%$domain"
+changevalues $path $file "$string"
+
+# DHCP-Server starten
+# Nameserver bind in Autostart und starten
+chkservice "dhcpd"
