@@ -60,7 +60,7 @@ ln -fs /etc/named.d/direct.forwarders /etc/named.d/named.forwarder
 # Konfigurationsdaten ermitteln
 ipmaster=`getconfdata "MasterIPint" "2"`
 fwstring=`getconfdata "Forwarders" "2"`
-domain=`getconfdata "Workgroup" "2"`
+domain=`getconfdata "Domain" "2"`
 
 path="/etc/named.d/"
 file="vpn.forwarders"
