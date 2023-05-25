@@ -69,9 +69,13 @@ nameserver=`getconfdata $conffile "nameServer" "2"`
 fqdn=`getconfdata $conffile "fqdn:" "2"`
 version=`getconfdata $conffile "invisVersion" "2"`
 version=`echo $version|tr -d "."`
-#version=`cat /etc/os-release |grep "^VERSION="|tr -d \"|tr -d .|cut -d "=" -f2`
 
-if (( $version < 014 )); then
+# ggf. fuehrende Null entfernen
+if [[ $version =~ ^0 ]];then
+    version=${version:1}
+fi
+
+if (( $version < 14 )); then
     keynumber=`getconfdata $conffile "keyNumber" "2"`
 else
     secret=`getconfdata $conffile "keySecret" "2"`
