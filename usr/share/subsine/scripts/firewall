@@ -53,6 +53,11 @@ echo "Kopiere Konfiguration..." | pgbox
 cp $TEMPLATEDIR/$modulename/external.xml /etc/firewalld/zones/ 2>&1| tee -a $LOGFILE | pgbox
 cp $TEMPLATEDIR/$modulename/internal.xml /etc/firewalld/zones/ 2>&1| tee -a $LOGFILE | pgbox
 
+# Wenn existent, Zone public loeschen:
+if [[ -f /etc/firewalld/zones/public.xml ]]; then
+    rm /etc/firewalld/zones/public.xml
+fi
+
 # geaenderten Portal-HTTPS-Port einfuegen
 #httpsport=`getconfdata "HTTPSPORT" "2"`
 #if [[ -n $httpsport ]]; then
