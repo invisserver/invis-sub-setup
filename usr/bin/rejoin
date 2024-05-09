@@ -1,0 +1,30 @@
+#!/bin/bash
+# Script zum autatischen Rejoin einer Domain
+#
+
+credfile="/etc/samba/.smbcred"
+checksumori="d13393c108c643e98798203a76880c78fa95e452eddb8d75e6db124be74e48a8"
+logfile="/var/log/samba/log.rejoin"
+
+# Neues Logfile initieren
+echo "`date`" > $logfile
+
+# Testen ob die Datei existiert und die korrekten Zugriffsrechte besitzt
+if [[ -f $credfile ]]; then
+	checksum=`sha256sum $credfile|cut -d " " -f1`
+	if [[ $checksum != $checksumori ]]; then
+		echo "Die Zugangsdatendatei wurde verändert, Abbruch!" >> $logfile
+		exit 1
+	fi
+fi
+
+# Passwort auslesen
+username=`cat $credfile |grep ^username|cut -d "=" -f2`
+pw=`cat $credfile |grep ^password|cut -d "=" -f2`
+#echo $pw
+
+# Domaenenbeitritt erneuern
+net join -U $username%$pw >> $logfile 2>&1
+
+
+
